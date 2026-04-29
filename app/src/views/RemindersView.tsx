@@ -1,4 +1,3 @@
-// Vista placeholder — se implementará en un hito futuro
 function RemindersView() {
   return (
     <div className="placeholder-view">

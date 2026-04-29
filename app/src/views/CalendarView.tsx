@@ -1,4 +1,3 @@
-// Vista placeholder — se implementará en un hito futuro
 function CalendarView() {
   return (
     <div className="placeholder-view">

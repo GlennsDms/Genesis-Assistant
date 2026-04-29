@@ -1,27 +1,20 @@
 /* =====================================================================
-   GENESIS — Sistema de diseño global
-   Inspirado en Persona 5: pop-art, tipografía agresiva, rojo sangre
+   GENESIS — Design system
    ===================================================================== */
 
-/* --- Google Fonts: se descargan desde internet la primera vez --- */
 @import url('https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap');
 
-/* --- Variables de color: definen la paleta de toda la app --- */
-/* Para usarlas en cualquier lugar: var(--blood), var(--bone), etc. */
 :root {
-  --noir:       #0a0a0a;  /* negro tinta — fondo general */
-  --ink:        #141414;  /* gris muy oscuro */
-  --blood:      #e60012;  /* rojo sangre — acento principal */
-  --blood-dark: #a30009;  /* rojo oscuro — hover/presionado */
-  --bone:       #faf6ee;  /* crema/marfil — fondo del panel */
-  --bone-dim:   #e8e0d0;  /* crema apagada — bordes y separadores */
-  --gold:       #ffc700;  /* dorado — prefijo del usuario en chat */
-  --sidebar-bg: #181818;  /* fondo del sidebar */
+  --noir:       #0a0a0a;
+  --ink:        #141414;
+  --blood:      #e60012;
+  --blood-dark: #a30009;
+  --bone:       #faf6ee;
+  --bone-dim:   #e8e0d0;
+  --gold:       #ffc700;
+  --sidebar-bg: #181818;
 }
 
-/* --- Reset básico ---
-   Por defecto los navegadores añaden márgenes y padding a los elementos.
-   Con box-sizing: border-box el ancho/alto incluye padding y borde. */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -31,7 +24,7 @@
 html, body, #root {
   height: 100%;
   width: 100%;
-  overflow: hidden; /* sin scroll en la raíz — cada sección maneja el suyo */
+  overflow: hidden;
 }
 
 body {
@@ -40,13 +33,12 @@ body {
   color: var(--bone);
 }
 
-/* Textura de grano: se superpone a TODO con pointer-events: none para no bloquear clics.
-   Usa un SVG en línea con un filtro de "ruido" (feTurbulence) para simular el grano.
-   El SVG está codificado en la URL para no necesitar un archivo externo. */
+/* Textura de grano: SVG con filtro feTurbulence renderizado como imagen de fondo.
+   pointer-events: none garantiza que no interfiera con ningún clic. */
 body::after {
   content: '';
   position: fixed;
-  inset: 0; /* equivale a top:0; right:0; bottom:0; left:0 */
+  inset: 0;
   pointer-events: none;
   z-index: 9999;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E");
@@ -54,31 +46,30 @@ body::after {
 }
 
 /* =====================================================================
-   LAYOUT PRINCIPAL
-   Dos columnas: sidebar fijo | panel flexible
+   Layout
    ===================================================================== */
 
 .app-layout {
-  display: flex;       /* los hijos se colocan en fila */
-  height: 100vh;       /* 100% de la altura de la ventana */
+  display: flex;
+  height: 100vh;
   width: 100vw;
   overflow: hidden;
 }
 
 .panel-principal {
-  flex: 1;             /* ocupa todo el espacio restante tras el sidebar */
+  flex: 1;
   overflow-y: auto;
   background: var(--bone);
   color: var(--noir);
 }
 
 /* =====================================================================
-   SIDEBAR
+   Sidebar
    ===================================================================== */
 
 .sidebar {
   width: 220px;
-  min-width: 220px;    /* no se encoge aunque la ventana sea pequeña */
+  min-width: 220px;
   background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
@@ -86,7 +77,6 @@ body::after {
   border-right: 1px solid #2a2a2a;
 }
 
-/* Logo "GNS" en la cabecera del sidebar */
 .sidebar-logo {
   font-family: 'Anton', sans-serif;
   font-size: 22px;
@@ -104,26 +94,22 @@ body::after {
   flex: 1;
 }
 
-/* Cada ítem del menú es un <button> con estilos personalizados */
 .sidebar-item {
-  /* Reset de estilos nativos del botón */
   border: none;
-  border-left: 3px solid transparent; /* reserva espacio para el borde rojo activo */
+  border-left: 3px solid transparent;
   background: transparent;
   width: 100%;
   text-align: left;
   cursor: pointer;
-
   display: flex;
   align-items: center;
   padding: 12px 24px;
-
   font-family: 'Oswald', sans-serif;
   font-size: 12px;
   letter-spacing: 2.5px;
   color: #777;
   transition: color 0.2s, background 0.2s;
-  user-select: none; /* evita seleccionar el texto al hacer clic */
+  user-select: none;
 }
 
 .sidebar-item:hover {
@@ -131,22 +117,21 @@ body::after {
   background: rgba(255, 255, 255, 0.04);
 }
 
-/* Ítem activo: borde izquierdo rojo + gradiente + skew estilo Persona 5 */
+/* El ítem activo inclina el fondo. El texto se contra-inclina para mantenerse recto. */
 .sidebar-item.activo {
   border-left: 3px solid var(--blood);
   background: linear-gradient(to right, rgba(230, 0, 18, 0.18), transparent);
   color: var(--bone);
-  transform: skewX(-6deg); /* inclina el fondo del ítem */
+  transform: skewX(-6deg);
 }
 
-/* El texto se inclina en sentido contrario para quedar recto */
 .sidebar-item.activo .item-label {
   display: inline-block;
   transform: skewX(6deg);
 }
 
 /* =====================================================================
-   PANTALLA DE ONBOARDING (primera vez que se abre la app)
+   Onboarding
    ===================================================================== */
 
 .onboarding {
@@ -167,7 +152,6 @@ body::after {
   margin-bottom: 6px;
 }
 
-/* Línea diagonal decorativa debajo del logo */
 .onboarding-slash {
   width: 180px;
   height: 3px;
@@ -185,7 +169,6 @@ body::after {
   margin-bottom: 20px;
 }
 
-/* El formulario tiene el mismo estilo que el chat: borde rojo, fondo oscuro */
 .onboarding-form {
   display: flex;
   align-items: stretch;
@@ -216,7 +199,6 @@ body::after {
   text-transform: uppercase;
 }
 
-/* Placeholder con estilo apagado */
 .onboarding-input::placeholder {
   color: #3a3a3a;
   font-size: 16px;
@@ -240,7 +222,7 @@ body::after {
 }
 
 /* =====================================================================
-   VISTA HOY
+   Vista Hoy
    ===================================================================== */
 
 .home-view {
@@ -250,11 +232,10 @@ body::after {
   overflow: hidden;
 }
 
-/* Sección de saludo */
 .home-header {
   padding: 40px 48px 28px 48px;
   border-bottom: 1px solid var(--bone-dim);
-  flex-shrink: 0; /* no se encoge aunque haya poco espacio */
+  flex-shrink: 0;
 }
 
 .home-saludo {
@@ -267,7 +248,6 @@ body::after {
   margin-bottom: 10px;
 }
 
-/* El nombre del usuario va en rojo sangre */
 .home-saludo .nombre {
   color: var(--blood);
 }
@@ -280,7 +260,6 @@ body::after {
   color: #aaa;
 }
 
-/* Grid de 3 tarjetas de resumen */
 .home-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -290,7 +269,6 @@ body::after {
   flex-shrink: 0;
 }
 
-/* Cada tarjeta: fondo blanco, borde izquierdo rojo, sombra sutil */
 .card {
   background: white;
   border-left: 4px solid var(--blood);
@@ -316,10 +294,9 @@ body::after {
 }
 
 /* =====================================================================
-   CHAT
+   Chat
    ===================================================================== */
 
-/* La sección de chat ocupa el resto de altura disponible */
 .chat-section {
   flex: 1;
   display: flex;
@@ -328,7 +305,6 @@ body::after {
   border-top: 3px solid var(--blood);
 }
 
-/* Zona de mensajes: scroll vertical cuando hay muchos */
 .chat-historial {
   flex: 1;
   overflow-y: auto;
@@ -345,21 +321,18 @@ body::after {
   color: var(--noir);
 }
 
-/* "USR ▸" — prefijo del usuario, en dorado */
 .prefijo-usr {
   color: var(--gold);
   font-weight: 500;
   margin-right: 4px;
 }
 
-/* "GEN ▸" — prefijo de GENESIS, en rojo */
 .prefijo-gen {
   color: var(--blood);
   font-weight: 500;
   margin-right: 4px;
 }
 
-/* Barra de input del chat */
 .chat-input-area {
   display: flex;
   align-items: center;
@@ -369,7 +342,6 @@ body::after {
   flex-shrink: 0;
 }
 
-/* El símbolo "▸" rojo a la izquierda del input */
 .chat-prompt-symbol {
   font-family: 'DM Mono', monospace;
   color: var(--blood);
@@ -393,8 +365,31 @@ body::after {
   color: #ccc;
 }
 
+.chat-input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Indicadores visuales de respuesta en progreso */
+@keyframes parpadeo {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.parpadeando {
+  animation: parpadeo 0.8s step-end infinite;
+}
+
+.cursor-stream {
+  animation: parpadeo 0.8s step-end infinite;
+  color: var(--blood);
+  font-size: 0.75em;
+  margin-left: 2px;
+  vertical-align: middle;
+}
+
 /* =====================================================================
-   VISTAS PLACEHOLDER (Calendario, Recordatorios, Horarios, Chat, Ajustes)
+   Vistas placeholder
    ===================================================================== */
 
 .placeholder-view {
@@ -424,7 +419,6 @@ body::after {
   color: var(--blood);
 }
 
-/* Línea diagonal roja decorativa */
 .placeholder-linea {
   width: 100px;
   height: 3px;

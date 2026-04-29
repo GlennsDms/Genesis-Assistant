@@ -1,19 +1,16 @@
-import { useState } from 'react'
-import { invoke } from '@tauri-apps/api/core'
+import { useState, useRef, useEffect } from 'react'
+import { streamChat } from '../lib/ollama'
+import type { OllamaMensaje } from '../lib/ollama'
 
-// Props que recibe HomeView desde App.tsx
 interface Props {
   userName: string
 }
 
-// Tipo que describe un mensaje del chat.
-// Un "type" en TS limita los valores posibles: autor solo puede ser 'usuario' o 'genesis'.
-type Mensaje = {
+type MensajeVisible = {
   autor: 'usuario' | 'genesis'
   texto: string
 }
 
-// Devuelve el saludo según la hora del día
 function obtenerSaludo(): string {
   const hora = new Date().getHours()
   if (hora >= 5 && hora < 12) return 'Buenos días'
@@ -21,10 +18,8 @@ function obtenerSaludo(): string {
   return 'Buenas noches'
 }
 
-// Formatea la fecha como: MIÉRCOLES · 29 ABRIL · 14:32
-// toLocaleDateString con 'es-ES' devuelve los nombres en español
 function obtenerFecha(): string {
-  const ahora = new Date()
+  const ahora  = new Date()
   const dia    = ahora.toLocaleDateString('es-ES', { weekday: 'long' }).toUpperCase()
   const numero = ahora.getDate()
   const mes    = ahora.toLocaleDateString('es-ES', { month: 'long' }).toUpperCase()
@@ -33,61 +28,81 @@ function obtenerFecha(): string {
 }
 
 function HomeView({ userName }: Props) {
-  // El historial de mensajes empieza con un saludo de GENESIS
-  const [mensajes, setMensajes] = useState<Mensaje[]>([
-    { autor: 'genesis', texto: 'Sistema activo. ¿En qué te ayudo hoy?' }
+  const [mensajes, setMensajes] = useState<MensajeVisible[]>([
+    { autor: 'genesis', texto: 'Sistema activo. ¿En qué te ayudo hoy?' },
   ])
 
-  // El texto que hay ahora mismo en el input del chat
-  const [inputTexto, setInputTexto] = useState('')
+  // historialAPI mantiene los mensajes en el formato que espera Ollama (role/content).
+  // Se construye en paralelo a mensajes[] y se pasa completo en cada llamada
+  // para que el modelo tenga contexto de toda la conversación.
+  const [historialAPI, setHistorialAPI] = useState<OllamaMensaje[]>([])
 
-  // Se ejecuta cuando el usuario pulsa Enter en el input del chat
+  const [inputTexto, setInputTexto]   = useState('')
+  const [respondiendo, setRespondiendo] = useState(false)
+
+  // useRef para acumular el texto del stream sin depender del ciclo de estado.
+  // Si usáramos una variable local, el closure de onChunk capturaría su valor
+  // inicial y no vería las actualizaciones posteriores.
+  const textoStreamRef = useRef('')
+
+  // Referencia al contenedor del historial para forzar el scroll al último mensaje.
+  const historialRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = historialRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [mensajes])
+
   async function enviarMensaje(e: React.FormEvent) {
     e.preventDefault()
     const texto = inputTexto.trim()
-    if (!texto) return // no enviamos mensajes vacíos
+    if (!texto || respondiendo) return
 
-    // 1. Añadimos el mensaje del usuario al historial
-    const mensajeUsuario: Mensaje = { autor: 'usuario', texto }
-    // prev => [...prev, mensajeUsuario] crea un array nuevo con todos los anteriores + el nuevo
-    setMensajes(prev => [...prev, mensajeUsuario])
-    setInputTexto('') // limpiamos el input
+    const mensajeUsuario: OllamaMensaje = { role: 'user', content: texto }
+    // Calculamos el historial actualizado aquí para pasárselo directamente a
+    // streamChat, evitando depender del estado que React aún no ha aplicado.
+    const nuevoHistorial = [...historialAPI, mensajeUsuario]
 
-    // ─── PUENTE REACT ↔ RUST ────────────────────────────────────────────
-    // invoke("greet", { name }) llama al comando "greet" definido en
-    // src-tauri/src/main.rs. Ese comando recibe un string y devuelve otro.
-    // En el futuro, aquí llamaremos a la IA real en lugar de "greet".
-    // Abre DevTools (Ctrl+Shift+I) para ver la respuesta de Rust en consola.
-    try {
-      const respuestaRust = await invoke<string>('greet', { name: texto })
-      console.log('[GENESIS → Rust devolvió]:', respuestaRust)
-    } catch (err) {
-      console.error('[GENESIS] Error al invocar Rust:', err)
-    }
-    // ────────────────────────────────────────────────────────────────────
+    setMensajes(prev => [...prev, { autor: 'usuario', texto }])
+    setHistorialAPI(nuevoHistorial)
+    setInputTexto('')
+    setRespondiendo(true)
+    textoStreamRef.current = ''
 
-    // 2. Añadimos la respuesta hardcoded de GENESIS
-    const respuestaGenesis: Mensaje = {
-      autor: 'genesis',
-      texto: 'Operación registrada. Te aviso cuando toque.'
-    }
-    setMensajes(prev => [...prev, respuestaGenesis])
+    // Insertamos un mensaje vacío del asistente que se irá completando con cada chunk.
+    setMensajes(prev => [...prev, { autor: 'genesis', texto: '' }])
+
+    await streamChat(nuevoHistorial, (chunk) => {
+      textoStreamRef.current += chunk
+      // Actualizamos el último mensaje del array en lugar de crear uno nuevo
+      // por cada token — evita que el historial crezca durante el stream.
+      setMensajes(prev => {
+        const copia  = [...prev]
+        const ultimo = copia[copia.length - 1]
+        copia[copia.length - 1] = { ...ultimo, texto: textoStreamRef.current }
+        return copia
+      })
+    })
+
+    // Registramos la respuesta completa en el historial de la API una vez terminado el stream.
+    setHistorialAPI(prev => [
+      ...prev,
+      { role: 'assistant', content: textoStreamRef.current },
+    ])
+
+    setRespondiendo(false)
   }
 
   return (
     <div className="home-view">
-
-      {/* Cabecera: saludo dinámico y fecha */}
       <header className="home-header">
         <h1 className="home-saludo">
           {obtenerSaludo()},{' '}
-          {/* {' '} añade el espacio que JSX elimina entre elementos */}
           <span className="nombre">{userName.toUpperCase()}.</span>
         </h1>
         <p className="home-fecha">{obtenerFecha()}</p>
       </header>
 
-      {/* Tarjetas de resumen diario */}
       <section className="home-cards">
         <div className="card">
           <div className="card-numero">3</div>
@@ -103,35 +118,37 @@ function HomeView({ userName }: Props) {
         </div>
       </section>
 
-      {/* Chat con GENESIS */}
       <section className="chat-section">
-
-        {/* Historial de mensajes */}
-        <div className="chat-historial">
+        <div className="chat-historial" ref={historialRef}>
           {mensajes.map((msg, i) => (
-            // key={i} le da a React un identificador único para cada mensaje
             <div key={i} className="chat-mensaje">
               {msg.autor === 'usuario' ? (
                 <><span className="prefijo-usr">USR ▸</span> {msg.texto}</>
               ) : (
-                <><span className="prefijo-gen">GEN ▸</span> {msg.texto}</>
+                <>
+                  <span className="prefijo-gen">GEN ▸</span>{' '}
+                  {msg.texto}
+                  {/* Cursor parpadeante en el último mensaje mientras el modelo genera */}
+                  {respondiendo && i === mensajes.length - 1 && (
+                    <span className="cursor-stream">█</span>
+                  )}
+                </>
               )}
             </div>
           ))}
         </div>
 
-        {/* Input del chat: al pulsar Enter llama a enviarMensaje */}
         <form className="chat-input-area" onSubmit={enviarMensaje}>
-          <span className="chat-prompt-symbol">▸</span>
+          <span className={`chat-prompt-symbol ${respondiendo ? 'parpadeando' : ''}`}>▸</span>
           <input
             className="chat-input"
             type="text"
             value={inputTexto}
             onChange={(e) => setInputTexto(e.target.value)}
-            placeholder="Escribe un mensaje y pulsa Enter..."
+            placeholder={respondiendo ? '' : 'Escribe un mensaje y pulsa Enter...'}
+            disabled={respondiendo}
           />
         </form>
-
       </section>
     </div>
   )

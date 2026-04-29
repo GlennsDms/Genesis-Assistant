@@ -1,4 +1,3 @@
-// Vista placeholder — se implementará en un hito futuro
 function SettingsView() {
   return (
     <div className="placeholder-view">

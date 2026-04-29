@@ -5,19 +5,14 @@
     "module": "ESNext",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
-
-    // jsx: "react-jsx" activa el soporte para JSX (la sintaxis <Componente />)
-    // sin esto TypeScript no sabe qué hacer con los archivos .tsx
     "jsx": "react-jsx",
 
-    /* Modo bundler (Vite se encarga de empaquetar) */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
 
-    /* Reglas estrictas de TypeScript */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
