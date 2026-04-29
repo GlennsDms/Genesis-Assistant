@@ -1,30 +1,24 @@
 import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
-// @ts-expect-error process is a nodejs global
+// @ts-expect-error process es una variable global de Node.js
 const host = process.env.TAURI_DEV_HOST;
 
-// https://vite.dev/config/
 export default defineConfig(async () => ({
+  // Plugin de React: le dice a Vite cómo compilar archivos .tsx (JSX)
+  plugins: [react()],
 
-  // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-  //
-  // 1. prevent Vite from obscuring rust errors
-  clearScreen: false,
-  // 2. tauri expects a fixed port, fail if that port is not available
+  // Opciones específicas de Tauri:
+  clearScreen: false, // no borra la consola para que se vean los errores de Rust
   server: {
-    port: 1420,
+    port: 1420,       // Tauri espera exactamente este puerto
     strictPort: true,
     host: host || false,
     hmr: host
-      ? {
-          protocol: "ws",
-          host,
-          port: 1421,
-        }
+      ? { protocol: "ws", host, port: 1421 }
       : undefined,
     watch: {
-      // 3. tell Vite to ignore watching `src-tauri`
-      ignored: ["**/src-tauri/**"],
+      ignored: ["**/src-tauri/**"], // ignora cambios en el código Rust
     },
   },
 }));
