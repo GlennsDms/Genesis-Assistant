@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MEMENTO — Roba tu tiempo de vuelta</title>
+<title>GENESIS — El despertar de tu asistente</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Oswald:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -330,7 +330,7 @@
     clip-path: polygon(8% 4%, 96% 0, 100% 92%, 4% 100%);
   }
   .mask-frame::after {
-    content: 'EXPEDIENTE 0451';
+    content: 'EXPEDIENTE 01:01';
     position: absolute;
     top: 16px; left: 24px;
     color: var(--bone);
@@ -1026,7 +1026,7 @@
 <body>
 
 <nav>
-  <a href="#" class="nav-logo">MEMENT<span>O</span></a>
+  <a href="#" class="nav-logo">GENESI<span>S</span></a>
   <ul class="nav-links">
     <li><a href="#missions">Misiones</a></li>
     <li><a href="#preview">Asistente</a></li>
@@ -1056,7 +1056,7 @@
       </h1>
 
       <p class="hero-sub">
-        MEMENTO es tu <strong>asistente phantom</strong>: gestiona recordatorios, calendario,
+        GENESIS es el <strong>despertar</strong> de tu asistente: gestiona recordatorios, calendario,
         horarios y tareas desde una IA local que vive en tu escritorio. Privado, gratuito,
         y con la cara de los <em>Phantom Thieves</em>.
       </p>
@@ -1069,7 +1069,7 @@
 
     <div class="hero-art">
       <div class="mask-frame"></div>
-      <span class="mask-tag mask-tag-1">CODENAME · 0451</span>
+      <span class="mask-tag mask-tag-1">CODENAME · GENESIS</span>
       <span class="mask-tag mask-tag-2">★ TARGET ACQUIRED</span>
       <svg class="mask-svg" viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg">
         <!-- domino mask shape inspired by, but distinct from, joker's -->
@@ -1126,7 +1126,7 @@
       <div class="section-num">01</div>
       <div class="section-title-wrap">
         <div class="section-eyebrow">Misiones del día</div>
-        <h2 class="section-title">Lo que MEMENTO hace por ti</h2>
+        <h2 class="section-title">Lo que GENESIS hace por ti</h2>
       </div>
     </div>
     <p class="section-desc">
@@ -1145,7 +1145,7 @@
       <h3 class="mission-name">Recordatorios sin escapatoria</h3>
       <p class="mission-desc">
         Pídele a la IA en lenguaje natural —"recuérdame llamar a mamá el jueves a las 8"—
-        y MEMENTO lo guarda, programa la notificación del sistema y lo cumple.
+        y GENESIS lo guarda, programa la notificación del sistema y lo cumple.
       </p>
       <div class="mission-tags">
         <span class="mission-tag">Lenguaje natural</span>
@@ -1177,7 +1177,7 @@
       <div class="mission-num"><small>MIS-03</small>03</div>
       <h3 class="mission-name">Horarios y rutinas</h3>
       <p class="mission-desc">
-        Define bloques de estudio, gym o trabajo. MEMENTO los respeta, te avisa
+        Define bloques de estudio, gym o trabajo. GENESIS los respeta, te avisa
         antes de cada uno y registra cuántas veces los cumples.
       </p>
       <div class="mission-tags">
@@ -1225,7 +1225,7 @@
       <div class="app-dots">
         <span class="app-dot"></span><span class="app-dot"></span><span class="app-dot"></span>
       </div>
-      <div class="app-title">MEMENTO · v0.1 · OPERACIÓN EN CURSO</div>
+      <div class="app-title">GENESIS · v0.1 · OPERACIÓN EN CURSO</div>
     </div>
     <div class="app-body">
       <aside class="app-sidebar">
@@ -1257,7 +1257,7 @@
 
         <div class="app-chat">
           <div class="chat-msg user" data-from="USR ▸">Recuérdame revisar el PR a las 18:00.</div>
-          <div class="chat-msg" data-from="MEM ▸">Hecho. Te avisaré a las 18:00 sobre revisar el PR. ¿Algo más, Joker?</div>
+          <div class="chat-msg" data-from="GEN ▸">Hecho. Te avisaré a las 18:00 sobre revisar el PR. ¿Algo más, Joker?</div>
           <div class="chat-input">
             <span style="color: var(--blood); font-family: 'DM Mono', monospace;">▸</span>
             <input class="chat-input-field" placeholder="Habla con tu phantom...">
@@ -1338,7 +1338,7 @@
 <!-- =================== FOOTER =================== -->
 <footer>
   <div class="foot-top">
-    <div class="foot-brand">MEMENT<span>O</span></div>
+    <div class="foot-brand">GENESI<span>S</span></div>
     <div class="foot-tagline">
       Inspirado en Persona 5.<br>
       No afiliado a Atlus / SEGA.<br>
@@ -1374,7 +1374,7 @@
         chat.insertBefore(userMsg, chat.querySelector('.chat-input'));
         const botMsg = document.createElement('div');
         botMsg.className = 'chat-msg';
-        botMsg.dataset.from = 'MEM ▸';
+        botMsg.dataset.from = 'GEN ▸';
         botMsg.textContent = 'Operación registrada. Te aviso cuando toque.';
         chat.insertBefore(botMsg, chat.querySelector('.chat-input'));
         input.value = '';
