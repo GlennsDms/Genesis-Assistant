@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEMENTO — Roba tu tiempo de vuelta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Oswald:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --noir: #0a0a0a;
+    --ink: #141414;
+    --blood: #e60012;
+    --blood-dark: #a30009;
+    --bone: #faf6ee;
+    --bone-dim: #e8e0d0;
+    --gold: #ffc700;
+    --shadow: rgba(0,0,0,.85);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bone);
+    color: var(--noir);
+    font-family: 'Oswald', sans-serif;
+    overflow-x: hidden;
+    cursor: default;
+    position: relative;
+  }
+
+  /* ============ GRAIN + HALFTONE LAYERS ============ */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(0,0,0,.18) 1px, transparent 1px);
+    background-size: 4px 4px;
+    pointer-events: none;
+    z-index: 1;
+    mix-blend-mode: multiply;
+    opacity: .35;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2' seed='3'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 0'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.5'/></svg>");
+    pointer-events: none;
+    z-index: 2;
+    mix-blend-mode: multiply;
+    opacity: .25;
+  }
+
+  /* ============ NAV ============ */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: var(--noir);
+    color: var(--bone);
+    padding: 14px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid var(--blood);
+    transform: skewY(-.5deg);
+    transform-origin: left;
+  }
+  nav > * { transform: skewY(.5deg); }
+
+  .nav-logo {
+    font-family: 'Anton', sans-serif;
+    font-size: 26px;
+    letter-spacing: 4px;
+    color: var(--bone);
+    text-decoration: none;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .nav-logo span { color: var(--blood); }
+  .nav-logo::before {
+    content: '';
+    display: inline-block;
+    width: 14px; height: 14px;
+    background: var(--blood);
+    transform: rotate(45deg);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
+  .nav-links a {
+    color: var(--bone);
+    text-decoration: none;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    position: relative;
+    transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--blood); }
+  .nav-links a:hover::before {
+    content: '▸';
+    position: absolute;
+    left: -16px;
+    color: var(--blood);
+  }
+
+  /* ============ HERO ============ */
+  .hero {
+    min-height: 100vh;
+    padding: 140px 60px 80px;
+    position: relative;
+    overflow: hidden;
+    background: var(--bone);
+  }
+
+  .hero-bg-blocks {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
+  }
+  .hero-bg-blocks .red-slash {
+    position: absolute;
+    background: var(--blood);
+    transform: skewX(-20deg);
+  }
+  .red-slash-1 {
+    top: -50px; right: -100px;
+    width: 60%; height: 380px;
+    clip-path: polygon(20% 0, 100% 0, 100% 100%, 0 100%);
+  }
+  .red-slash-2 {
+    bottom: 60px; left: -80px;
+    width: 280px; height: 70px;
+  }
+  .black-blob {
+    position: absolute;
+    bottom: -80px; right: 10%;
+    width: 320px; height: 320px;
+    background: var(--noir);
+    transform: rotate(15deg);
+    clip-path: polygon(20% 0, 100% 10%, 95% 60%, 80% 100%, 10% 95%, 0 40%);
+    opacity: .9;
+  }
+
+  .halftone {
+    position: absolute;
+    background-image: radial-gradient(circle, var(--noir) 22%, transparent 24%);
+    background-size: 14px 14px;
+    pointer-events: none;
+  }
+  .halftone-1 {
+    top: 220px; left: 5%;
+    width: 220px; height: 280px;
+    opacity: .7;
+    transform: rotate(-8deg);
+    mask-image: linear-gradient(135deg, black, transparent);
+  }
+  .halftone-2 {
+    top: 140px; right: 8%;
+    width: 320px; height: 200px;
+    background-image: radial-gradient(circle, var(--bone) 22%, transparent 24%);
+    background-size: 12px 12px;
+    opacity: .6;
+    mask-image: linear-gradient(225deg, black, transparent);
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 40px;
+    align-items: center;
+    position: relative;
+    z-index: 3;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .hero-eyebrow {
+    display: inline-block;
+    background: var(--noir);
+    color: var(--bone);
+    padding: 6px 18px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    transform: skewX(-10deg) rotate(-1deg);
+    border: 2px solid var(--blood);
+    box-shadow: 6px 6px 0 var(--blood);
+  }
+  .hero-eyebrow span { display: inline-block; transform: skewX(10deg); }
+
+  .hero-title {
+    font-family: 'Anton', sans-serif;
+    font-size: clamp(72px, 11vw, 180px);
+    line-height: .82;
+    color: var(--noir);
+    letter-spacing: -2px;
+    text-transform: uppercase;
+    font-style: italic;
+    margin-bottom: 18px;
+  }
+  .hero-title .line {
+    display: block;
+    overflow: hidden;
+  }
+  .hero-title .line span {
+    display: inline-block;
+    animation: rise 1s cubic-bezier(.2,.9,.3,1.2) backwards;
+  }
+  .hero-title .line:nth-child(1) span { animation-delay: .1s; }
+  .hero-title .line:nth-child(2) span { animation-delay: .25s; color: var(--blood); }
+  .hero-title .line:nth-child(3) span { animation-delay: .4s; }
+
+  @keyframes rise {
+    from { transform: translateY(110%) skewY(8deg); opacity: 0; }
+    to   { transform: translateY(0) skewY(0); opacity: 1; }
+  }
+
+  .hero-title .stamp {
+    display: inline-block;
+    background: var(--blood);
+    color: var(--bone);
+    padding: 0 12px;
+    margin-left: 6px;
+    transform: rotate(-3deg);
+  }
+
+  .hero-sub {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 1.5;
+    max-width: 520px;
+    margin-bottom: 36px;
+    border-left: 4px solid var(--blood);
+    padding-left: 18px;
+    animation: rise 1s ease .6s backwards;
+  }
+  .hero-sub strong {
+    background: var(--noir);
+    color: var(--bone);
+    padding: 1px 8px;
+    font-weight: 600;
+  }
+
+  .hero-ctas {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    animation: rise 1s ease .8s backwards;
+  }
+
+  .btn {
+    font-family: 'Anton', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-style: italic;
+    text-decoration: none;
+    padding: 18px 36px;
+    font-size: 22px;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transform: skewX(-8deg);
+    transition: transform .15s, box-shadow .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .btn > * { transform: skewX(8deg); }
+  .btn-primary {
+    background: var(--blood);
+    color: var(--bone);
+    box-shadow: 8px 8px 0 var(--noir);
+  }
+  .btn-primary:hover {
+    transform: skewX(-8deg) translate(-3px, -3px);
+    box-shadow: 11px 11px 0 var(--noir);
+  }
+  .btn-primary:active {
+    transform: skewX(-8deg) translate(4px, 4px);
+    box-shadow: 2px 2px 0 var(--noir);
+  }
+  .btn-ghost {
+    background: var(--bone);
+    color: var(--noir);
+    border: 3px solid var(--noir);
+    box-shadow: 8px 8px 0 var(--blood);
+  }
+  .btn-ghost:hover {
+    transform: skewX(-8deg) translate(-3px, -3px);
+    box-shadow: 11px 11px 0 var(--blood);
+  }
+
+  /* ============ MASK ART ============ */
+  .hero-art {
+    position: relative;
+    height: 540px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: floatIn 1.2s cubic-bezier(.2,.9,.3,1.1) backwards;
+    animation-delay: .3s;
+  }
+  @keyframes floatIn {
+    from { transform: translateX(80px) rotate(8deg); opacity: 0; }
+    to   { transform: translateX(0) rotate(0); opacity: 1; }
+  }
+
+  .mask-frame {
+    position: absolute;
+    inset: 0;
+    background: var(--noir);
+    clip-path: polygon(8% 4%, 96% 0, 100% 92%, 4% 100%);
+  }
+  .mask-frame::after {
+    content: 'EXPEDIENTE 0451';
+    position: absolute;
+    top: 16px; left: 24px;
+    color: var(--bone);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+  }
+  .mask-frame::before {
+    content: '';
+    position: absolute;
+    inset: 14px;
+    border: 1px dashed rgba(250,246,238,.25);
+    pointer-events: none;
+  }
+
+  .mask-svg {
+    position: relative;
+    z-index: 2;
+    width: 75%;
+    filter: drop-shadow(8px 8px 0 var(--blood));
+    animation: maskBob 4s ease-in-out infinite;
+  }
+  @keyframes maskBob {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50% { transform: translateY(-12px) rotate(2deg); }
+  }
+
+  .mask-tag {
+    position: absolute;
+    background: var(--blood);
+    color: var(--bone);
+    padding: 6px 14px;
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    z-index: 3;
+  }
+  .mask-tag-1 { top: 30px; right: 30px; transform: rotate(8deg); }
+  .mask-tag-2 { bottom: 50px; left: 30px; transform: rotate(-6deg); background: var(--gold); color: var(--noir); }
+
+  /* ============ MARQUEE ============ */
+  .marquee {
+    background: var(--noir);
+    color: var(--blood);
+    padding: 20px 0;
+    overflow: hidden;
+    border-top: 4px solid var(--blood);
+    border-bottom: 4px solid var(--blood);
+    transform: rotate(-1.5deg);
+    margin: -20px -20px 0;
+    position: relative;
+    z-index: 5;
+  }
+  .marquee-track {
+    display: flex;
+    gap: 60px;
+    animation: scroll 28s linear infinite;
+    white-space: nowrap;
+    width: max-content;
+  }
+  .marquee-track span {
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: 38px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+  .marquee-track span::after {
+    content: '★';
+    color: var(--bone);
+    margin-left: 60px;
+  }
+  @keyframes scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  /* ============ FEATURES / MISIONES ============ */
+  .missions {
+    padding: 120px 60px 100px;
+    background: var(--bone);
+    position: relative;
+  }
+
+  .section-head {
+    max-width: 1400px;
+    margin: 0 auto 60px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+
+  .section-num {
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: 200px;
+    line-height: .8;
+    color: var(--blood);
+    -webkit-text-stroke: 0;
+    margin-right: 20px;
+  }
+  .section-title-wrap {
+    flex: 1;
+    min-width: 280px;
+  }
+  .section-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--blood);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-eyebrow::before {
+    content: '';
+    width: 40px;
+    height: 2px;
+    background: var(--blood);
+  }
+  .section-title {
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: clamp(48px, 7vw, 110px);
+    line-height: .88;
+    text-transform: uppercase;
+    letter-spacing: -1px;
+  }
+
+  .section-desc {
+    max-width: 380px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink);
+    align-self: flex-end;
+  }
+
+  .mission-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .mission-card {
+    position: relative;
+    padding: 36px 32px 32px;
+    background: var(--bone);
+    border: 3px solid var(--noir);
+    transition: transform .25s cubic-bezier(.2,.9,.3,1.1);
+    cursor: pointer;
+  }
+  .mission-card:nth-child(1) { transform: rotate(-1deg); }
+  .mission-card:nth-child(2) { transform: rotate(1deg); }
+  .mission-card:nth-child(3) { transform: rotate(.5deg); }
+  .mission-card:nth-child(4) { transform: rotate(-.8deg); }
+
+  .mission-card:hover { transform: rotate(0) translateY(-6px); }
+  .mission-card:hover .mission-num { color: var(--blood); }
+  .mission-card:hover::after { background: var(--blood); }
+
+  .mission-card::before {
+    content: '';
+    position: absolute;
+    top: -3px; left: -3px; right: -3px; bottom: -3px;
+    background: var(--noir);
+    z-index: -1;
+    transform: translate(8px, 8px);
+    transition: background .2s;
+  }
+  .mission-card:hover::before { background: var(--blood); }
+
+  .mission-card::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 60px;
+    height: 60px;
+    background: var(--noir);
+    clip-path: polygon(0 0, 100% 0, 100% 100%);
+    transition: background .2s;
+  }
+
+  .mission-num {
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: 90px;
+    line-height: .8;
+    color: var(--noir);
+    transition: color .2s;
+    margin-bottom: 6px;
+  }
+  .mission-num small {
+    font-size: 18px;
+    font-family: 'DM Mono', monospace;
+    font-style: normal;
+    letter-spacing: 3px;
+    color: var(--blood);
+    vertical-align: super;
+    margin-right: 8px;
+  }
+
+  .mission-icon {
+    position: absolute;
+    top: 28px; right: 28px;
+    width: 56px; height: 56px;
+    color: var(--blood);
+    z-index: 2;
+  }
+
+  .mission-name {
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: 38px;
+    line-height: .9;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    letter-spacing: -.5px;
+  }
+
+  .mission-desc {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink);
+    margin-bottom: 20px;
+    max-width: 90%;
+  }
+
+  .mission-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .mission-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 4px 10px;
+    background: var(--noir);
+    color: var(--bone);
+    text-transform: uppercase;
+  }
+
+  /* ============ APP MOCKUP ============ */
+  .preview {
+    background: var(--noir);
+    color: var(--bone);
+    padding: 120px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+  .preview::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    background: var(--bone);
+    clip-path: polygon(0 0, 100% 0, 100% 0, 0 100%);
+  }
+
+  .preview .section-eyebrow { color: var(--gold); }
+  .preview .section-eyebrow::before { background: var(--gold); }
+  .preview .section-title { color: var(--bone); }
+  .preview .section-num { color: var(--bone); }
+  .preview .section-desc { color: var(--bone-dim); }
+
+  .app-window {
+    max-width: 1100px;
+    margin: 60px auto 0;
+    background: #0e0e0e;
+    border: 3px solid var(--blood);
+    box-shadow: 20px 20px 0 var(--blood);
+    transform: rotate(-1deg);
+    overflow: hidden;
+    transition: transform .3s;
+  }
+  .app-window:hover { transform: rotate(0) translateY(-4px); }
+
+  .app-titlebar {
+    background: var(--blood);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .app-dots { display: flex; gap: 6px; }
+  .app-dot {
+    width: 12px; height: 12px;
+    background: var(--noir);
+    border-radius: 50%;
+  }
+  .app-title {
+    flex: 1;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--bone);
+    text-transform: uppercase;
+  }
+
+  .app-body {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: 460px;
+  }
+
+  .app-sidebar {
+    background: #181818;
+    padding: 24px 0;
+    border-right: 1px solid #2a2a2a;
+  }
+  .app-side-item {
+    padding: 14px 24px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    border-left: 3px solid transparent;
+    cursor: pointer;
+    transition: all .15s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .app-side-item:hover { background: #222; color: var(--bone); }
+  .app-side-item.active {
+    background: linear-gradient(90deg, var(--blood-dark), transparent);
+    color: var(--bone);
+    border-left-color: var(--blood);
+    transform: skewX(-6deg);
+  }
+  .app-side-item.active::before { content: '▸'; color: var(--blood); }
+
+  .app-main {
+    padding: 32px;
+  }
+  .app-greeting {
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: 42px;
+    line-height: .9;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .app-greeting span { color: var(--blood); }
+  .app-subgreeting {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--bone-dim);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  .app-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 26px;
+  }
+  .app-card {
+    background: #181818;
+    border: 1px solid #2a2a2a;
+    padding: 16px;
+    border-left: 3px solid var(--blood);
+    transition: transform .15s;
+  }
+  .app-card:hover { transform: translateY(-3px); border-left-color: var(--gold); }
+  .app-card-num {
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: 38px;
+    line-height: 1;
+    color: var(--bone);
+  }
+  .app-card-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    margin-top: 4px;
+  }
+
+  .app-chat {
+    background: #181818;
+    border: 1px solid #2a2a2a;
+    padding: 18px;
+    border-top: 3px solid var(--blood);
+  }
+  .chat-msg {
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+    padding-left: 70px;
+    position: relative;
+    color: var(--bone-dim);
+  }
+  .chat-msg::before {
+    content: attr(data-from);
+    position: absolute;
+    left: 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--blood);
+    font-weight: 600;
+  }
+  .chat-msg.user::before { color: var(--gold); }
+
+  .chat-input {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed #2a2a2a;
+  }
+  .chat-input-field {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--bone);
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    padding: 6px 0;
+  }
+  .chat-input-field::before {
+    content: '> ';
+    color: var(--blood);
+  }
+
+  /* ============ DOWNLOAD ============ */
+  .download {
+    padding: 120px 60px;
+    background: var(--blood);
+    color: var(--bone);
+    position: relative;
+    overflow: hidden;
+  }
+  .download::before {
+    content: 'DESCARGA · DESCARGA · DESCARGA · DESCARGA · ';
+    position: absolute;
+    top: 20px;
+    left: -10px;
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: 80px;
+    color: var(--blood-dark);
+    letter-spacing: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .download .section-head { position: relative; z-index: 1; }
+  .download .section-eyebrow { color: var(--noir); }
+  .download .section-eyebrow::before { background: var(--noir); }
+  .download .section-num { color: var(--noir); }
+  .download .section-title { color: var(--bone); }
+  .download .section-desc { color: var(--bone); font-weight: 500; }
+
+  .download-grid {
+    max-width: 1100px;
+    margin: 60px auto 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .dl-card {
+    background: var(--noir);
+    color: var(--bone);
+    padding: 36px 28px;
+    text-decoration: none;
+    border: 3px solid var(--bone);
+    transition: transform .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .dl-card:hover {
+    transform: translate(-4px, -4px);
+    box-shadow: 8px 8px 0 var(--noir);
+  }
+  .dl-card:nth-child(1) { transform: rotate(-1deg); }
+  .dl-card:nth-child(2) { transform: rotate(.5deg); }
+  .dl-card:nth-child(3) { transform: rotate(-.5deg); }
+  .dl-card:nth-child(1):hover,
+  .dl-card:nth-child(2):hover,
+  .dl-card:nth-child(3):hover { transform: rotate(0) translate(-4px, -4px); }
+
+  .dl-os-icon {
+    width: 48px; height: 48px;
+    margin-bottom: 18px;
+    color: var(--bone);
+  }
+  .dl-os-name {
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: 36px;
+    text-transform: uppercase;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .dl-os-detail {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--bone-dim);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .dl-os-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--blood);
+    border-bottom: 2px solid var(--blood);
+    padding-bottom: 4px;
+  }
+  .dl-card:hover .dl-os-cta { color: var(--gold); border-color: var(--gold); }
+
+  /* ============ STACK / OPEN SOURCE ============ */
+  .stack {
+    padding: 100px 60px;
+    background: var(--noir);
+    color: var(--bone);
+    text-align: center;
+  }
+  .stack-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--blood);
+    margin-bottom: 14px;
+  }
+  .stack-title {
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: clamp(40px, 6vw, 80px);
+    text-transform: uppercase;
+    line-height: .9;
+    margin-bottom: 18px;
+  }
+  .stack-title span { color: var(--blood); }
+  .stack-desc {
+    max-width: 620px;
+    margin: 0 auto 50px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--bone-dim);
+  }
+  .stack-list {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: 50px;
+  }
+  .stack-item {
+    background: transparent;
+    border: 2px solid var(--bone);
+    padding: 12px 22px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    transition: all .2s;
+  }
+  .stack-item:hover {
+    background: var(--blood);
+    border-color: var(--blood);
+    transform: translateY(-2px);
+  }
+  .stack-item span {
+    color: var(--blood);
+    margin-right: 6px;
+    font-family: 'DM Mono', monospace;
+  }
+  .stack-item:hover span { color: var(--bone); }
+
+  .github-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--bone);
+    color: var(--noir);
+    padding: 18px 36px;
+    text-decoration: none;
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: 22px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transform: skewX(-8deg);
+    box-shadow: 8px 8px 0 var(--blood);
+    transition: all .2s;
+  }
+  .github-cta > * { transform: skewX(8deg); }
+  .github-cta:hover {
+    transform: skewX(-8deg) translate(-3px, -3px);
+    box-shadow: 11px 11px 0 var(--blood);
+  }
+
+  /* ============ FOOTER ============ */
+  footer {
+    background: var(--bone);
+    padding: 50px 60px 30px;
+    border-top: 4px solid var(--noir);
+    position: relative;
+  }
+  .foot-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 30px;
+    max-width: 1400px;
+    margin: 0 auto 30px;
+  }
+  .foot-brand {
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: 90px;
+    line-height: .8;
+    text-transform: uppercase;
+    color: var(--noir);
+    letter-spacing: -2px;
+  }
+  .foot-brand span { color: var(--blood); }
+  .foot-tagline {
+    max-width: 280px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+  .foot-bot {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-top: 20px;
+    border-top: 1px dashed var(--noir);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 900px) {
+    nav { padding: 12px 20px; }
+    .nav-links { display: none; }
+    .hero { padding: 110px 20px 60px; }
+    .hero-grid { grid-template-columns: 1fr; gap: 30px; }
+    .hero-art { height: 380px; }
+    .missions, .preview, .download, .stack { padding: 80px 20px; }
+    .mission-grid { grid-template-columns: 1fr; }
+    .download-grid { grid-template-columns: 1fr; }
+    .section-num { font-size: 130px; }
+    .app-body { grid-template-columns: 1fr; }
+    .app-sidebar { display: flex; gap: 4px; padding: 12px; overflow-x: auto; border-right: none; border-bottom: 1px solid #2a2a2a; }
+    .app-side-item { padding: 8px 14px; font-size: 12px; white-space: nowrap; }
+    .app-cards { grid-template-columns: 1fr 1fr; }
+    .foot-brand { font-size: 56px; }
+    footer { padding: 40px 20px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="nav-logo">MEMENT<span>O</span></a>
+  <ul class="nav-links">
+    <li><a href="#missions">Misiones</a></li>
+    <li><a href="#preview">Asistente</a></li>
+    <li><a href="#download">Descarga</a></li>
+    <li><a href="#stack">Código</a></li>
+  </ul>
+</nav>
+
+<!-- =================== HERO =================== -->
+<section class="hero">
+  <div class="hero-bg-blocks">
+    <div class="red-slash red-slash-1"></div>
+    <div class="red-slash red-slash-2"></div>
+    <div class="black-blob"></div>
+  </div>
+  <div class="halftone halftone-1"></div>
+  <div class="halftone halftone-2"></div>
+
+  <div class="hero-grid">
+    <div class="hero-copy">
+      <div class="hero-eyebrow"><span>★ ASISTENTE PERSONAL · OPEN SOURCE</span></div>
+
+      <h1 class="hero-title">
+        <span class="line"><span>ROBA TU</span></span>
+        <span class="line"><span>TIEMPO</span></span>
+        <span class="line"><span>DE VUELTA<span class="stamp">!</span></span></span>
+      </h1>
+
+      <p class="hero-sub">
+        MEMENTO es tu <strong>asistente phantom</strong>: gestiona recordatorios, calendario,
+        horarios y tareas desde una IA local que vive en tu escritorio. Privado, gratuito,
+        y con la cara de los <em>Phantom Thieves</em>.
+      </p>
+
+      <div class="hero-ctas">
+        <a href="#download" class="btn btn-primary"><span>↓ Descargar</span></a>
+        <a href="#preview" class="btn btn-ghost"><span>Ver el asistente</span></a>
+      </div>
+    </div>
+
+    <div class="hero-art">
+      <div class="mask-frame"></div>
+      <span class="mask-tag mask-tag-1">CODENAME · 0451</span>
+      <span class="mask-tag mask-tag-2">★ TARGET ACQUIRED</span>
+      <svg class="mask-svg" viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg">
+        <!-- domino mask shape inspired by, but distinct from, joker's -->
+        <defs>
+          <linearGradient id="maskGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#faf6ee"/>
+            <stop offset="100%" stop-color="#e8dfc9"/>
+          </linearGradient>
+        </defs>
+        <path d="M 30 80
+                 Q 90 30, 180 50
+                 L 220 50
+                 Q 310 30, 370 80
+                 L 380 130
+                 Q 360 200, 280 200
+                 Q 230 200, 210 160
+                 L 190 160
+                 Q 170 200, 120 200
+                 Q 40 200, 20 130 Z"
+              fill="url(#maskGrad)"
+              stroke="#0a0a0a"
+              stroke-width="6"
+              stroke-linejoin="round"/>
+        <!-- left eye hole (tilted, sharp) -->
+        <path d="M 60 110 L 160 100 L 170 145 L 80 155 Z"
+              fill="#0a0a0a"/>
+        <!-- right eye hole (mirrored) -->
+        <path d="M 240 100 L 340 110 L 320 155 L 230 145 Z"
+              fill="#0a0a0a"/>
+        <!-- accent slash -->
+        <path d="M 200 60 L 215 80 L 200 100 L 185 80 Z" fill="#e60012"/>
+        <!-- decorative stitches -->
+        <line x1="100" y1="65" x2="120" y2="58" stroke="#0a0a0a" stroke-width="2" stroke-dasharray="3 3"/>
+        <line x1="280" y1="58" x2="300" y2="65" stroke="#0a0a0a" stroke-width="2" stroke-dasharray="3 3"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- =================== MARQUEE =================== -->
+<div class="marquee">
+  <div class="marquee-track">
+    <span>RECORDATORIOS</span><span>CALENDARIO</span><span>IA LOCAL</span><span>OPEN SOURCE</span>
+    <span>HORARIOS</span><span>PRIVACIDAD TOTAL</span><span>GRATIS</span>
+    <span>RECORDATORIOS</span><span>CALENDARIO</span><span>IA LOCAL</span><span>OPEN SOURCE</span>
+    <span>HORARIOS</span><span>PRIVACIDAD TOTAL</span><span>GRATIS</span>
+  </div>
+</div>
+
+<!-- =================== MISSIONS =================== -->
+<section class="missions" id="missions">
+  <div class="section-head">
+    <div style="display: flex; align-items: flex-end; gap: 0;">
+      <div class="section-num">01</div>
+      <div class="section-title-wrap">
+        <div class="section-eyebrow">Misiones del día</div>
+        <h2 class="section-title">Lo que MEMENTO hace por ti</h2>
+      </div>
+    </div>
+    <p class="section-desc">
+      Cuatro objetivos. Una sola app. Sin suscripciones, sin telemetría,
+      sin nada que no controles tú.
+    </p>
+  </div>
+
+  <div class="mission-grid">
+    <div class="mission-card">
+      <svg class="mission-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 7v5l3 2"/>
+      </svg>
+      <div class="mission-num"><small>MIS-01</small>01</div>
+      <h3 class="mission-name">Recordatorios sin escapatoria</h3>
+      <p class="mission-desc">
+        Pídele a la IA en lenguaje natural —"recuérdame llamar a mamá el jueves a las 8"—
+        y MEMENTO lo guarda, programa la notificación del sistema y lo cumple.
+      </p>
+      <div class="mission-tags">
+        <span class="mission-tag">Lenguaje natural</span>
+        <span class="mission-tag">Notificaciones nativas</span>
+      </div>
+    </div>
+
+    <div class="mission-card">
+      <svg class="mission-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <rect x="3" y="5" width="18" height="16" rx="1"/>
+        <path d="M3 10h18M8 3v4M16 3v4"/>
+      </svg>
+      <div class="mission-num"><small>MIS-02</small>02</div>
+      <h3 class="mission-name">Calendario que entiende</h3>
+      <p class="mission-desc">
+        Importa tu .ics de Google Calendar, Outlook o Apple Calendar.
+        Pregunta "¿qué tengo mañana?" y obtén un parte de operaciones.
+      </p>
+      <div class="mission-tags">
+        <span class="mission-tag">iCal · CalDAV</span>
+        <span class="mission-tag">Sincronización</span>
+      </div>
+    </div>
+
+    <div class="mission-card">
+      <svg class="mission-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M3 12h4l3-9 4 18 3-9h4"/>
+      </svg>
+      <div class="mission-num"><small>MIS-03</small>03</div>
+      <h3 class="mission-name">Horarios y rutinas</h3>
+      <p class="mission-desc">
+        Define bloques de estudio, gym o trabajo. MEMENTO los respeta, te avisa
+        antes de cada uno y registra cuántas veces los cumples.
+      </p>
+      <div class="mission-tags">
+        <span class="mission-tag">Time-blocking</span>
+        <span class="mission-tag">Estadísticas</span>
+      </div>
+    </div>
+
+    <div class="mission-card">
+      <svg class="mission-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <div class="mission-num"><small>MIS-04</small>04</div>
+      <h3 class="mission-name">Chat IA 100% local</h3>
+      <p class="mission-desc">
+        Corre sobre Ollama: tus conversaciones nunca salen del PC.
+        Cero API keys, cero coste, cero compañía leyendo tus datos.
+      </p>
+      <div class="mission-tags">
+        <span class="mission-tag">Ollama</span>
+        <span class="mission-tag">Llama 3.2 · Phi-3</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== APP PREVIEW =================== -->
+<section class="preview" id="preview">
+  <div class="section-head">
+    <div style="display: flex; align-items: flex-end; gap: 0;">
+      <div class="section-num">02</div>
+      <div class="section-title-wrap">
+        <div class="section-eyebrow">El asistente</div>
+        <h2 class="section-title">Una interfaz que <br>roba miradas</h2>
+      </div>
+    </div>
+    <p class="section-desc">
+      Inspirada en los menús de los Phantom Thieves: tipografía italic,
+      diagonales rojas, y todo a un click.
+    </p>
+  </div>
+
+  <div class="app-window">
+    <div class="app-titlebar">
+      <div class="app-dots">
+        <span class="app-dot"></span><span class="app-dot"></span><span class="app-dot"></span>
+      </div>
+      <div class="app-title">MEMENTO · v0.1 · OPERACIÓN EN CURSO</div>
+    </div>
+    <div class="app-body">
+      <aside class="app-sidebar">
+        <div class="app-side-item active">▸ Hoy</div>
+        <div class="app-side-item">Calendario</div>
+        <div class="app-side-item">Recordatorios</div>
+        <div class="app-side-item">Horarios</div>
+        <div class="app-side-item">Chat</div>
+        <div class="app-side-item">Ajustes</div>
+      </aside>
+      <main class="app-main">
+        <h3 class="app-greeting">Buenas tardes, <span>Joker</span>.</h3>
+        <p class="app-subgreeting">Miércoles · 29 abril · 14:32</p>
+
+        <div class="app-cards">
+          <div class="app-card">
+            <div class="app-card-num">3</div>
+            <div class="app-card-label">Eventos hoy</div>
+          </div>
+          <div class="app-card">
+            <div class="app-card-num">7</div>
+            <div class="app-card-label">Recordatorios</div>
+          </div>
+          <div class="app-card">
+            <div class="app-card-num">2h</div>
+            <div class="app-card-label">Bloque de foco</div>
+          </div>
+        </div>
+
+        <div class="app-chat">
+          <div class="chat-msg user" data-from="USR ▸">Recuérdame revisar el PR a las 18:00.</div>
+          <div class="chat-msg" data-from="MEM ▸">Hecho. Te avisaré a las 18:00 sobre revisar el PR. ¿Algo más, Joker?</div>
+          <div class="chat-input">
+            <span style="color: var(--blood); font-family: 'DM Mono', monospace;">▸</span>
+            <input class="chat-input-field" placeholder="Habla con tu phantom...">
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</section>
+
+<!-- =================== DOWNLOAD =================== -->
+<section class="download" id="download">
+  <div class="section-head">
+    <div style="display: flex; align-items: flex-end; gap: 0;">
+      <div class="section-num">03</div>
+      <div class="section-title-wrap">
+        <div class="section-eyebrow">Toma la decisión</div>
+        <h2 class="section-title">Descárgalo<br>ahora</h2>
+      </div>
+    </div>
+    <p class="section-desc">
+      Ejecutables firmados para las tres plataformas. Un solo click,
+      sin instaladores ofuscados. Tamaño aprox. 18 MB.
+    </p>
+  </div>
+
+  <div class="download-grid">
+    <a href="#" class="dl-card">
+      <svg class="dl-os-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z"/>
+      </svg>
+      <div class="dl-os-name">Windows</div>
+      <div class="dl-os-detail">.exe · 10/11 · 64-bit</div>
+      <div class="dl-os-cta">Descargar ↗</div>
+    </a>
+    <a href="#" class="dl-card">
+      <svg class="dl-os-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.5 12.5c0-2.4 2-3.5 2-3.5s-1.1-1.6-2.8-1.7c-1.2-.1-2.4.7-3 .7-.6 0-1.6-.7-2.7-.7-1.4 0-2.7.8-3.4 2.1-1.5 2.6-.4 6.4 1 8.5.7 1 1.5 2.2 2.6 2.1 1 0 1.4-.7 2.7-.7s1.6.7 2.7.7c1.1 0 1.8-1 2.5-2 .8-1.2 1.1-2.3 1.1-2.4-.1 0-2.1-.8-2.7-3.1zM14.7 5.6c.6-.7 1-1.7.9-2.6-.8 0-1.8.5-2.4 1.2-.5.6-1 1.6-.9 2.5.9 0 1.8-.5 2.4-1.1z"/>
+      </svg>
+      <div class="dl-os-name">macOS</div>
+      <div class="dl-os-detail">.dmg · 12+ · ARM/Intel</div>
+      <div class="dl-os-cta">Descargar ↗</div>
+    </a>
+    <a href="#" class="dl-card">
+      <svg class="dl-os-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C7 2 6 7 7 12c-1 1-3 4-3 6 0 1 1 2 2 2h12c1 0 2-1 2-2 0-2-2-5-3-6 1-5 0-10-5-10zm-2 7c0-1 1-2 2-2s2 1 2 2-1 1-2 1-2 0-2-1z"/>
+      </svg>
+      <div class="dl-os-name">Linux</div>
+      <div class="dl-os-detail">.AppImage · .deb · .rpm</div>
+      <div class="dl-os-cta">Descargar ↗</div>
+    </a>
+  </div>
+</section>
+
+<!-- =================== STACK / OPEN SOURCE =================== -->
+<section class="stack" id="stack">
+  <div class="stack-eyebrow">★ EXPEDIENTE TÉCNICO · 04</div>
+  <h2 class="stack-title">Construido a mano,<br><span>libre para siempre.</span></h2>
+  <p class="stack-desc">
+    Sin trampas, sin SaaS oculto. Todo el código vive en GitHub bajo licencia MIT,
+    y el ejecutable que descargas se compila desde ese mismo código.
+  </p>
+
+  <div class="stack-list">
+    <div class="stack-item"><span>01</span>Tauri</div>
+    <div class="stack-item"><span>02</span>React + TypeScript</div>
+    <div class="stack-item"><span>03</span>Rust</div>
+    <div class="stack-item"><span>04</span>Ollama</div>
+    <div class="stack-item"><span>05</span>SQLite</div>
+    <div class="stack-item"><span>06</span>iCal</div>
+  </div>
+
+  <a href="#" class="github-cta">
+    <span>★ Ver en GitHub →</span>
+  </a>
+</section>
+
+<!-- =================== FOOTER =================== -->
+<footer>
+  <div class="foot-top">
+    <div class="foot-brand">MEMENT<span>O</span></div>
+    <div class="foot-tagline">
+      Inspirado en Persona 5.<br>
+      No afiliado a Atlus / SEGA.<br>
+      © 2026 — MIT License
+    </div>
+  </div>
+  <div class="foot-bot">
+    <div>★ MADE BY THE PHANTOM CREW</div>
+    <div>v0.1.0 · BUILD 0451</div>
+    <div>HECHO EN MADRID</div>
+  </div>
+</footer>
+
+<script>
+  // smooth click animation on mission cards (toggle visited stamp)
+  document.querySelectorAll('.mission-card').forEach((card, i) => {
+    card.addEventListener('click', () => {
+      card.style.transform = 'rotate(0) scale(.98)';
+      setTimeout(() => { card.style.transform = ''; }, 180);
+    });
+  });
+
+  // chat input: enter triggers a fake response
+  const input = document.querySelector('.chat-input-field');
+  if (input) {
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && input.value.trim()) {
+        const chat = document.querySelector('.app-chat');
+        const userMsg = document.createElement('div');
+        userMsg.className = 'chat-msg user';
+        userMsg.dataset.from = 'USR ▸';
+        userMsg.textContent = input.value;
+        chat.insertBefore(userMsg, chat.querySelector('.chat-input'));
+        const botMsg = document.createElement('div');
+        botMsg.className = 'chat-msg';
+        botMsg.dataset.from = 'MEM ▸';
+        botMsg.textContent = 'Operación registrada. Te aviso cuando toque.';
+        chat.insertBefore(botMsg, chat.querySelector('.chat-input'));
+        input.value = '';
+        chat.scrollTop = chat.scrollHeight;
+      }
+    });
+  }
+
+  // parallax on hero mask (subtle)
+  const mask = document.querySelector('.mask-svg');
+  if (mask) {
+    document.addEventListener('mousemove', e => {
+      const x = (e.clientX / window.innerWidth - .5) * 14;
+      const y = (e.clientY / window.innerHeight - .5) * 14;
+      mask.style.transform = `translate(${x}px, ${y}px)`;
+    });
+  }
+</script>
+
+</body>
+</html>
