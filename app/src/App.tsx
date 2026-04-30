@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { Vista } from './types'
 import Sidebar from './components/Sidebar'
 import OnboardingScreen from './components/OnboardingScreen'
@@ -8,6 +8,7 @@ import RemindersView from './views/RemindersView'
 import ScheduleView from './views/ScheduleView'
 import ChatView from './views/ChatView'
 import SettingsView from './views/SettingsView'
+import { listReminders } from './lib/db'
 
 function App() {
   // El nombre persiste en localStorage; la función de inicialización solo se ejecuta una vez.
@@ -15,6 +16,26 @@ function App() {
     () => localStorage.getItem('genesis_username') ?? ''
   )
   const [vistaActiva, setVistaActiva] = useState<Vista>('hoy')
+
+  // El conteo de pendientes se refresca cuando el usuario vuelve al dashboard.
+  // Inicializamos con null para distinguir "sin cargar aún" de "cero recordatorios".
+  const [pendingCount, setPendingCount] = useState<number>(0)
+
+  const refrescarConteo = useCallback(async () => {
+    try {
+      const todos = await listReminders()
+      setPendingCount(todos.filter(r => r.completed === 0).length)
+    } catch {
+      // La BD puede no estar lista en el primer render; el conteo ya está en 0.
+    }
+  }, [])
+
+  // Refresca el conteo cada vez que el usuario navega a la vista "hoy".
+  useEffect(() => {
+    if (vistaActiva === 'hoy') {
+      refrescarConteo()
+    }
+  }, [vistaActiva, refrescarConteo])
 
   if (!userName) {
     return (
@@ -29,9 +50,9 @@ function App() {
 
   function renderVista() {
     switch (vistaActiva) {
-      case 'hoy':           return <HomeView userName={userName} />
+      case 'hoy':           return <HomeView userName={userName} pendingCount={pendingCount} />
       case 'calendario':    return <CalendarView />
-      case 'recordatorios': return <RemindersView />
+      case 'recordatorios': return <RemindersView onCambioConteo={refrescarConteo} />
       case 'horarios':      return <ScheduleView />
       case 'chat':          return <ChatView />
       case 'ajustes':       return <SettingsView />

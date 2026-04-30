@@ -4,6 +4,7 @@ import type { OllamaMensaje } from '../lib/ollama'
 
 interface Props {
   userName: string
+  pendingCount: number
 }
 
 type MensajeVisible = {
@@ -27,7 +28,7 @@ function obtenerFecha(): string {
   return `${dia} · ${numero} ${mes} · ${hora}`
 }
 
-function HomeView({ userName }: Props) {
+function HomeView({ userName, pendingCount }: Props) {
   const [mensajes, setMensajes] = useState<MensajeVisible[]>([
     { autor: 'genesis', texto: 'Sistema activo. ¿En qué te ayudo hoy?' },
   ])
@@ -109,7 +110,7 @@ function HomeView({ userName }: Props) {
           <div className="card-label">Eventos hoy</div>
         </div>
         <div className="card">
-          <div className="card-numero">7</div>
+          <div className="card-numero">{pendingCount}</div>
           <div className="card-label">Recordatorios</div>
         </div>
         <div className="card">
