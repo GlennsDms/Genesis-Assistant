@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification'
 import type { Vista } from './types'
 import Sidebar from './components/Sidebar'
 import OnboardingScreen from './components/OnboardingScreen'
@@ -9,6 +10,7 @@ import ScheduleView from './views/ScheduleView'
 import ChatView from './views/ChatView'
 import SettingsView from './views/SettingsView'
 import { listReminders } from './lib/db'
+import { scheduleReminder } from './lib/scheduler'
 
 function App() {
   // El nombre persiste en localStorage; la función de inicialización solo se ejecuta una vez.
@@ -20,6 +22,10 @@ function App() {
   // El conteo de pendientes se refresca cuando el usuario vuelve al dashboard.
   // Inicializamos con null para distinguir "sin cargar aún" de "cero recordatorios".
   const [pendingCount, setPendingCount] = useState<number>(0)
+
+  // Evita que la inicialización del scheduler se ejecute más de una vez,
+  // incluso en React strict mode (que monta efectos dos veces en desarrollo).
+  const schedulerIniciado = useRef(false)
 
   const refrescarConteo = useCallback(async () => {
     try {
@@ -36,6 +42,45 @@ function App() {
       refrescarConteo()
     }
   }, [vistaActiva, refrescarConteo])
+
+  // Solicita permiso de notificación y rehidrata el scheduler al arrancar.
+  // Se ejecuta una sola vez en cuanto hay un userName válido (post-onboarding).
+  useEffect(() => {
+    if (!userName || schedulerIniciado.current) return
+    schedulerIniciado.current = true
+
+    async function inicializar() {
+      // Pedir permiso de notificación si todavía no se ha concedido.
+      try {
+        let concedido = await isPermissionGranted()
+        if (!concedido) {
+          const respuesta = await requestPermission()
+          concedido = respuesta === 'granted'
+        }
+      } catch (e) {
+        console.error('[genesis] error al solicitar permiso de notificación:', e)
+      }
+
+      // Rehidratar el scheduler: programa notificaciones para todos los recordatorios
+      // pendientes con fecha futura. Cubre el caso de que la app se haya cerrado y reabierto.
+      try {
+        const ahora = new Date()
+        const todos = await listReminders()
+        const pendientesFuturos = todos.filter(
+          r => r.completed === 0 && r.due_at !== null && new Date(r.due_at) > ahora
+        )
+        await Promise.all(
+          pendientesFuturos.map(r =>
+            scheduleReminder(r.id, r.due_at!, r.title, r.description)
+          )
+        )
+      } catch (e) {
+        console.error('[genesis] error al rehidratar el scheduler:', e)
+      }
+    }
+
+    inicializar()
+  }, [userName])
 
   if (!userName) {
     return (

@@ -1,16 +1,21 @@
 import { useState } from 'react'
 import type { NewReminder } from '../lib/types'
-import { inputLocalAIso } from '../lib/dateFormat'
+import { inputLocalAIso, isoAInputLocal } from '../lib/dateFormat'
 
 interface Props {
-  onCrear: (data: NewReminder) => Promise<void>
-  onCancelar: () => void
+  onGuardar:     (data: NewReminder) => Promise<void>
+  onCancelar:    () => void
+  initialValues?: NewReminder
+  modoEdicion?:  boolean
 }
 
-function ReminderForm({ onCrear, onCancelar }: Props) {
-  const [titulo,      setTitulo]      = useState('')
-  const [descripcion, setDescripcion] = useState('')
-  const [fechaLocal,  setFechaLocal]  = useState('')
+function ReminderForm({ onGuardar, onCancelar, initialValues, modoEdicion }: Props) {
+  const [titulo,      setTitulo]      = useState(initialValues?.title       ?? '')
+  const [descripcion, setDescripcion] = useState(initialValues?.description ?? '')
+  // Convertimos el ISO almacenado al formato que acepta datetime-local.
+  const [fechaLocal,  setFechaLocal]  = useState(
+    initialValues?.due_at ? isoAInputLocal(initialValues.due_at) : ''
+  )
   const [guardando,   setGuardando]   = useState(false)
   const [error,       setError]       = useState('')
 
@@ -25,7 +30,7 @@ function ReminderForm({ onCrear, onCancelar }: Props) {
     setGuardando(true)
     setError('')
     try {
-      await onCrear({
+      await onGuardar({
         title:       tituloLimpio,
         description: descripcion.trim() || null,
         due_at:      fechaLocal ? inputLocalAIso(fechaLocal) : null,
@@ -55,7 +60,7 @@ function ReminderForm({ onCrear, onCancelar }: Props) {
           className="reminder-form-input reminder-form-input--secondary"
           type="text"
           placeholder="Descripción (opcional)"
-          value={descripcion}
+          value={descripcion ?? ''}
           onChange={(e) => setDescripcion(e.target.value)}
           disabled={guardando}
         />
@@ -79,7 +84,7 @@ function ReminderForm({ onCrear, onCancelar }: Props) {
           type="submit"
           disabled={guardando}
         >
-          {guardando ? 'GUARDANDO...' : 'CREAR'}
+          {guardando ? 'GUARDANDO...' : modoEdicion ? 'GUARDAR' : 'CREAR'}
         </button>
         <button
           className="reminder-btn reminder-btn--ghost"

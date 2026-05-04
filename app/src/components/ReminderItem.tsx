@@ -6,9 +6,10 @@ interface Props {
   reminder: Reminder
   onToggle:  (id: number) => Promise<void>
   onBorrar:  (id: number) => Promise<void>
+  onEditar:  (reminder: Reminder) => void
 }
 
-function ReminderItem({ reminder, onToggle, onBorrar }: Props) {
+function ReminderItem({ reminder, onToggle, onBorrar, onEditar }: Props) {
   // El estado de confirmación vive aquí, no en el padre, para que cada item
   // gestione su propio diálogo sin contaminar la lista completa.
   const [confirmando, setConfirmando] = useState(false)
@@ -79,14 +80,27 @@ function ReminderItem({ reminder, onToggle, onBorrar }: Props) {
             </button>
           </span>
         ) : (
-          <button
-            className="reminder-borrar"
-            type="button"
-            onClick={() => setConfirmando(true)}
-            aria-label="Borrar recordatorio"
-          >
-            ×
-          </button>
+          <>
+            {!completado && (
+              <button
+                className="reminder-editar"
+                type="button"
+                onClick={() => onEditar(reminder)}
+                disabled={procesando}
+                aria-label="Editar recordatorio"
+              >
+                ✎
+              </button>
+            )}
+            <button
+              className="reminder-borrar"
+              type="button"
+              onClick={() => setConfirmando(true)}
+              aria-label="Borrar recordatorio"
+            >
+              ×
+            </button>
+          </>
         )}
       </div>
     </li>
