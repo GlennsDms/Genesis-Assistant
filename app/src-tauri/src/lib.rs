@@ -8,6 +8,16 @@ use tauri::{
     Manager,
 };
 use tauri_plugin_notification::NotificationExt;
+use tauri::Emitter;
+
+/// Datos que viajan al frontend cuando un recordatorio vence.
+/// El frontend los usa para montar la alarma in-app.
+#[derive(serde::Serialize, Clone)]
+struct ReminderDuePayload {
+    id: i64,
+    title: String,
+    description: String,
+}
 // Estado compartido: cada recordatorio pendiente tiene exactamente una tarea tokio activa.
 // El Mutex garantiza que programar y cancelar sean operaciones atómicas.
 // Usamos tauri::async_runtime::JoinHandle porque spawn() devuelve ese tipo (no tokio directamente).
@@ -48,6 +58,8 @@ fn schedule_reminder(
     let handle = tauri::async_runtime::spawn(async move {
         tokio::time::sleep(std::time::Duration::from_millis(millis)).await;
         // El task puede ser abortado antes de llegar aquí si el recordatorio se cancela o edita.
+
+        // 1. Notificación nativa: conservada como respaldo para cuando la app está en bandeja.
         if let Err(e) = app_clone
             .notification()
             .builder()
@@ -56,6 +68,23 @@ fn schedule_reminder(
             .show()
         {
             eprintln!("[genesis] fallo al disparar notificación para recordatorio {id}: {e}");
+        }
+
+        // 2. Evento al frontend para montar la alarma in-app a pantalla completa.
+        let payload = ReminderDuePayload {
+            id,
+            title: titulo.clone(),
+            description: cuerpo.clone(),
+        };
+        if let Err(e) = app_clone.emit("reminder-due", &payload) {
+            eprintln!("[genesis] fallo al emitir reminder-due para recordatorio {id}: {e}");
+        }
+
+        // 3. Sacar la ventana al frente para que el usuario vea la alarma in-app.
+        if let Some(ventana) = app_clone.get_webview_window("main") {
+            let _ = ventana.unminimize();
+            let _ = ventana.show();
+            let _ = ventana.set_focus();
         }
     });
 

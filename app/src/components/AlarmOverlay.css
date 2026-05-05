@@ -1,0 +1,212 @@
+/* Alarma in-app a pantalla completa — Hito 5 ampliado.
+   El overlay ignora el layout de la app: monta encima de sidebar y panel principal
+   sin destruir su estado, gracias a position: fixed. */
+
+.alarm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  /* Gradiente diagonal rojo sangre → negro, base del fondo pop-art. */
+  background: linear-gradient(135deg, var(--blood) 0%, #5a0008 35%, var(--noir) 70%);
+
+  /* Animación de entrada: wipe diagonal que revela el contenido. */
+  animation: alarm-wipe-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Wipe diagonal de izquierda a derecha con un clip-path. */
+@keyframes alarm-wipe-in {
+  from {
+    clip-path: polygon(0 0, 0 0, -10% 100%, 0 100%);
+  }
+  to {
+    clip-path: polygon(0 0, 110% 0, 110% 100%, 0 100%);
+  }
+}
+
+/* ── Halftone pop-art ─────────────────────────────────────────────────────── */
+
+.alarm-overlay__halftone {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* Puntos pop-art usando radial-gradient repetido. */
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+/* ── Slashes diagonales animados ─────────────────────────────────────────── */
+
+.alarm-overlay__slashes {
+  position: absolute;
+  inset: -50%;
+  pointer-events: none;
+  /* Líneas diagonales a 45° que se mueven lentamente para dar sensación de urgencia. */
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 28px,
+    rgba(230, 0, 18, 0.12) 28px,
+    rgba(230, 0, 18, 0.12) 30px
+  );
+  animation: alarm-slashes-drift 8s linear infinite;
+}
+
+@keyframes alarm-slashes-drift {
+  from { transform: translateX(0) translateY(0); }
+  to   { transform: translateX(60px) translateY(60px); }
+}
+
+/* ── Contenido central ───────────────────────────────────────────────────── */
+
+.alarm-overlay__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 48px 40px;
+  max-width: 720px;
+  width: 100%;
+  text-align: center;
+}
+
+/* ── Etiqueta de estado ──────────────────────────────────────────────────── */
+
+.alarm-overlay__label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--bone-dim);
+  opacity: 0.8;
+}
+
+/* ── Título del recordatorio ─────────────────────────────────────────────── */
+
+.alarm-overlay__title {
+  font-family: 'Anton', sans-serif;
+  font-style: italic;
+  font-size: clamp(56px, 10vw, 140px);
+  line-height: 0.9;
+  text-transform: uppercase;
+  color: #ffffff;
+  margin: 0;
+  word-break: break-word;
+  animation: alarm-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes alarm-pulse {
+  0%, 100% { opacity: 1;    transform: scale(1); }
+  50%       { opacity: 0.88; transform: scale(0.985); }
+}
+
+/* ── Descripción ─────────────────────────────────────────────────────────── */
+
+.alarm-overlay__description {
+  font-family: 'Oswald', sans-serif;
+  font-size: 18px;
+  color: var(--bone);
+  opacity: 0.9;
+  margin: 0;
+  max-width: 540px;
+  line-height: 1.4;
+}
+
+/* ── Reloj ───────────────────────────────────────────────────────────────── */
+
+.alarm-overlay__clock {
+  position: absolute;
+  top: 24px;
+  right: 32px;
+  font-family: 'DM Mono', monospace;
+  font-size: 28px;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.05em;
+  line-height: 1;
+  z-index: 1;
+  /* Separamos el reloj del contenido central para que no compita visualmente. */
+  pointer-events: none;
+}
+
+/* ── Botones ─────────────────────────────────────────────────────────────── */
+
+.alarm-overlay__actions {
+  display: flex;
+  gap: 20px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Base compartida: botones grandes skewed -8deg, estilo Persona 5. */
+.alarm-btn {
+  position: relative;
+  font-family: 'Anton', sans-serif;
+  font-style: italic;
+  font-size: 20px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 16px 40px;
+  border: none;
+  cursor: pointer;
+  transform: skewX(-8deg);
+  transition: filter 0.15s ease, transform 0.15s ease;
+  min-width: 200px;
+}
+
+.alarm-btn:hover {
+  filter: brightness(1.12);
+  transform: skewX(-8deg) translateY(-2px);
+}
+
+.alarm-btn:active {
+  transform: skewX(-8deg) translateY(0);
+  filter: brightness(0.95);
+}
+
+/* El texto interior se des-skewea para que no quede inclinado. */
+.alarm-btn span {
+  display: inline-block;
+  transform: skewX(8deg);
+}
+
+/* HECHO — crema con sombra dorada */
+.alarm-btn--done {
+  background: var(--bone);
+  color: var(--noir);
+  box-shadow: 4px 4px 0 var(--gold);
+}
+
+/* POSPONER 10 MIN — noir con sombra roja */
+.alarm-btn--snooze {
+  background: var(--noir);
+  color: var(--bone);
+  box-shadow: 4px 4px 0 var(--blood);
+}
+
+/* ── Fallback de autoplay ────────────────────────────────────────────────── */
+
+.alarm-overlay__sound-fallback {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--gold);
+  background: transparent;
+  border: 1px solid var(--gold);
+  padding: 6px 16px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.15s;
+}
+
+.alarm-overlay__sound-fallback:hover {
+  opacity: 1;
+}

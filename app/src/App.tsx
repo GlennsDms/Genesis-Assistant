@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification'
+import { listen } from '@tauri-apps/api/event'
 import type { Vista } from './types'
+import type { AlarmPayload } from './lib/types'
 import Sidebar from './components/Sidebar'
 import OnboardingScreen from './components/OnboardingScreen'
 import HomeView from './views/HomeView'
@@ -9,8 +11,9 @@ import RemindersView from './views/RemindersView'
 import ScheduleView from './views/ScheduleView'
 import ChatView from './views/ChatView'
 import SettingsView from './views/SettingsView'
-import { listReminders } from './lib/db'
-import { scheduleReminder } from './lib/scheduler'
+import AlarmOverlay from './components/AlarmOverlay'
+import { listReminders, toggleReminderCompleted, updateReminder } from './lib/db'
+import { scheduleReminder, cancelReminder } from './lib/scheduler'
 
 function App() {
   // El nombre persiste en localStorage; la función de inicialización solo se ejecuta una vez.
@@ -22,6 +25,10 @@ function App() {
   // El conteo de pendientes se refresca cuando el usuario vuelve al dashboard.
   // Inicializamos con null para distinguir "sin cargar aún" de "cero recordatorios".
   const [pendingCount, setPendingCount] = useState<number>(0)
+
+  // Cola FIFO de alarmas. Si dos recordatorios vencen a la vez, la segunda
+  // espera a que el usuario cierre la primera antes de aparecer.
+  const [colaAlarmas, setColaAlarmas] = useState<AlarmPayload[]>([])
 
   // Evita que la inicialización del scheduler se ejecute más de una vez,
   // incluso en React strict mode (que monta efectos dos veces en desarrollo).
@@ -82,6 +89,53 @@ function App() {
     inicializar()
   }, [userName])
 
+  // Suscripción al evento Tauri emitido por Rust cuando un recordatorio vence.
+  // El unlisten se llama al desmontar para no acumular listeners en strict mode.
+  useEffect(() => {
+    if (!userName) return
+
+    let unlisten: (() => void) | null = null
+
+    listen<AlarmPayload>('reminder-due', (event) => {
+      setColaAlarmas(prev => [...prev, event.payload])
+    }).then(fn => { unlisten = fn })
+
+    return () => { unlisten?.() }
+  }, [userName])
+
+  // ── Handlers de la alarma activa ──────────────────────────────────────────
+
+  // El primer elemento de la cola es la alarma que se muestra en pantalla.
+  const alarmaActiva = colaAlarmas[0] ?? null
+
+  async function handleAlarmaDone() {
+    if (!alarmaActiva) return
+    // El recordatorio estaba pending (completed=0); el toggle lo marca como completado.
+    try {
+      await toggleReminderCompleted(alarmaActiva.id)
+      await cancelReminder(alarmaActiva.id)
+    } catch (e) {
+      console.error('[genesis] error al completar recordatorio desde alarma:', e)
+    }
+    setColaAlarmas(prev => prev.slice(1))
+    refrescarConteo()
+  }
+
+  async function handleAlarmaSnooze() {
+    if (!alarmaActiva) return
+    // Reprogramar +10 minutos desde este instante.
+    const nuevaHora = new Date(Date.now() + 10 * 60 * 1000).toISOString()
+    try {
+      await updateReminder(alarmaActiva.id, { due_at: nuevaHora })
+      await scheduleReminder(alarmaActiva.id, nuevaHora, alarmaActiva.title, alarmaActiva.description)
+    } catch (e) {
+      console.error('[genesis] error al posponer recordatorio desde alarma:', e)
+    }
+    setColaAlarmas(prev => prev.slice(1))
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+
   if (!userName) {
     return (
       <OnboardingScreen
@@ -110,6 +164,17 @@ function App() {
       <main className="panel-principal">
         {renderVista()}
       </main>
+
+      {/* El overlay se monta encima de todo el layout sin destruir el estado
+          del formulario de recordatorios ni ninguna otra vista activa. */}
+      {alarmaActiva && (
+        <AlarmOverlay
+          key={alarmaActiva.id}
+          payload={alarmaActiva}
+          onDone={handleAlarmaDone}
+          onSnooze={handleAlarmaSnooze}
+        />
+      )}
     </div>
   )
 }
