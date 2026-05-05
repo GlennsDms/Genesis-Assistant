@@ -25,16 +25,22 @@ fn schedule_reminder(
     title: String,
     description: Option<String>,
 ) -> Result<(), String> {
+    eprintln!("[genesis] schedule_reminder recibido: id={id} due_at_iso={due_at_iso:?}");
+
     let due = chrono::DateTime::parse_from_rfc3339(&due_at_iso)
         .map_err(|e| format!("fecha inválida: {e}"))?
         .with_timezone(&Utc);
 
     let diff = due.signed_duration_since(Utc::now());
+    eprintln!("[genesis] diff calculado: {}s ({}ms)", diff.num_seconds(), diff.num_milliseconds());
+
     if diff.num_milliseconds() <= 0 {
+        eprintln!("[genesis] recordatorio {id} ya venció — no se programa");
         return Ok(());
     }
 
     let millis = diff.num_milliseconds() as u64;
+    eprintln!("[genesis] programando recordatorio {id} en {millis}ms");
     let app_clone = app.clone();
     let titulo = title.clone();
     let cuerpo = description.unwrap_or_default();
@@ -60,6 +66,18 @@ fn schedule_reminder(
     }
 
     Ok(())
+}
+
+/// Dispara una notificación nativa de inmediato, sin delay.
+/// Solo para verificar en desarrollo que el sistema de notificaciones funciona.
+#[tauri::command]
+fn test_notification(app: tauri::AppHandle) -> Result<(), String> {
+    app.notification()
+        .builder()
+        .title("Genesis — Test")
+        .body("Las notificaciones funcionan correctamente.")
+        .show()
+        .map_err(|e| e.to_string())
 }
 
 /// Cancela la notificación programada para el recordatorio indicado.
@@ -152,7 +170,7 @@ pub fn run() {
                 api.prevent_close();
             }
         })
-        .invoke_handler(tauri::generate_handler![schedule_reminder, cancel_reminder])
+        .invoke_handler(tauri::generate_handler![schedule_reminder, cancel_reminder, test_notification])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

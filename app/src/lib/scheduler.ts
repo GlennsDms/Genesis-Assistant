@@ -11,13 +11,15 @@ export async function scheduleReminder(
   title: string,
   description: string | null,
 ): Promise<void> {
+  console.log('[genesis] schedule_reminder ->', { id, due_at_iso: dueAt, title, description })
   try {
     await invoke('schedule_reminder', {
       id,
-      due_at_iso: dueAt,
+      dueAtIso: dueAt,
       title,
       description,
     })
+    console.log('[genesis] schedule_reminder OK para id', id)
   } catch (e) {
     console.error('[genesis] fallo al programar notificación del recordatorio', id, e)
   }
