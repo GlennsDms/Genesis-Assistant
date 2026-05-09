@@ -191,22 +191,3 @@
   box-shadow: 4px 4px 0 var(--blood);
 }
 
-/* ── Fallback de autoplay ────────────────────────────────────────────────── */
-
-.alarm-overlay__sound-fallback {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: var(--gold);
-  background: transparent;
-  border: 1px solid var(--gold);
-  padding: 6px 16px;
-  cursor: pointer;
-  opacity: 0.8;
-  transition: opacity 0.15s;
-}
-
-.alarm-overlay__sound-fallback:hover {
-  opacity: 1;
-}

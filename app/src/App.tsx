@@ -12,7 +12,8 @@ import ScheduleView from './views/ScheduleView'
 import ChatView from './views/ChatView'
 import SettingsView from './views/SettingsView'
 import AlarmOverlay from './components/AlarmOverlay'
-import { listReminders, toggleReminderCompleted, updateReminder } from './lib/db'
+import { useAudioUnlock } from './hooks/useAudioUnlock'
+import { listReminders, markReminderCompleted, updateReminder } from './lib/db'
 import { scheduleReminder, cancelReminder } from './lib/scheduler'
 
 function App() {
@@ -25,6 +26,10 @@ function App() {
   // El conteo de pendientes se refresca cuando el usuario vuelve al dashboard.
   // Inicializamos con null para distinguir "sin cargar aún" de "cero recordatorios".
   const [pendingCount, setPendingCount] = useState<number>(0)
+
+  // Desbloquea el contexto de audio en el primer gesto del usuario para que
+  // la alarma pueda reproducirse automáticamente sin necesitar interacción.
+  useAudioUnlock()
 
   // Cola FIFO de alarmas. Si dos recordatorios vencen a la vez, la segunda
   // espera a que el usuario cierre la primera antes de aparecer.
@@ -90,17 +95,32 @@ function App() {
   }, [userName])
 
   // Suscripción al evento Tauri emitido por Rust cuando un recordatorio vence.
-  // El unlisten se llama al desmontar para no acumular listeners en strict mode.
+  // La Promise de listen() resuelve en una microtarea posterior al montaje: en
+  // React Strict Mode el cleanup síncrono del primer mount corre antes de que
+  // resuelva, dejando unlisten === null y el listener huérfano activo. Esto
+  // duplicaba la cola de alarmas y provocaba que HECHO ejecutara el toggle dos
+  // veces, revirtiéndolo. La bandera `cancelled` garantiza que si el cleanup
+  // ya corrió, el listener se cancela en cuanto la Promise resuelva.
   useEffect(() => {
     if (!userName) return
 
+    let cancelled = false
     let unlisten: (() => void) | null = null
 
     listen<AlarmPayload>('reminder-due', (event) => {
       setColaAlarmas(prev => [...prev, event.payload])
-    }).then(fn => { unlisten = fn })
+    }).then(fn => {
+      if (cancelled) {
+        fn()
+      } else {
+        unlisten = fn
+      }
+    })
 
-    return () => { unlisten?.() }
+    return () => {
+      cancelled = true
+      unlisten?.()
+    }
   }, [userName])
 
   // ── Handlers de la alarma activa ──────────────────────────────────────────
@@ -110,9 +130,11 @@ function App() {
 
   async function handleAlarmaDone() {
     if (!alarmaActiva) return
-    // El recordatorio estaba pending (completed=0); el toggle lo marca como completado.
+    // markReminderCompleted (SET completed=1) en lugar del toggle genérico:
+    // desde una alarma el recordatorio siempre era pendiente, y la operación
+    // directa es idempotente si el handler se ejecuta más de una vez.
     try {
-      await toggleReminderCompleted(alarmaActiva.id)
+      await markReminderCompleted(alarmaActiva.id)
       await cancelReminder(alarmaActiva.id)
     } catch (e) {
       console.error('[genesis] error al completar recordatorio desde alarma:', e)

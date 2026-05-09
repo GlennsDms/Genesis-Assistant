@@ -2,20 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import type { AlarmPayload } from '../lib/types'
 import './AlarmOverlay.css'
 
-// TODO: reemplaza este archivo por un MP3 real antes de la release.
-// Colocarlo en public/sounds/genesis_alarm.mp3 es suficiente; no requiere rebuild.
-const ALARM_AUDIO_SRC = '/sounds/genesis_alarm.mp3'
+const ALARM_AUDIO_SRC = '/sounds/Genesis_Alarm.mp3'
 
-/**
- * Encapsula el ciclo de vida del objeto Audio para la alarma.
- * Se separa en un hook para que AlarmOverlay sea puramente declarativo.
- *
- * Cuando `activa` pasa a true, intenta reproducir en bucle.
- * Si el navegador/WebView bloquea el autoplay, activa el modo fallback.
- */
+// Encapsula el ciclo de vida del objeto Audio para la alarma.
+// Se separa en un hook para que AlarmOverlay sea puramente declarativo.
 function useAlarmAudio(activa: boolean) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const [necesitaInteraccion, setNecesitaInteraccion] = useState(false)
 
   useEffect(() => {
     if (!activa) return
@@ -25,34 +17,30 @@ function useAlarmAudio(activa: boolean) {
     audioRef.current = audio
 
     audio.play().catch((e: unknown) => {
-      // WebView2 en Windows puede bloquear autoplay sin gesto previo del usuario.
+      // El contexto de audio debería estar desbloqueado por useAudioUnlock en App.
+      // Si aún falla, lo registramos para diagnóstico sin mostrar ninguna UI al usuario.
       console.error('[genesis] autoplay de alarma bloqueado:', e)
-      setNecesitaInteraccion(true)
     })
 
     return () => {
       audio.pause()
       audio.currentTime = 0
+      // src = '' libera la referencia interna al recurso de red/decodificación;
+      // sin esto el objeto Audio puede retener memoria aunque el overlay desmonte.
+      audio.src = ''
       audioRef.current = null
-      setNecesitaInteraccion(false)
     }
   }, [activa])
-
-  function activarSonido() {
-    audioRef.current?.play().catch((e: unknown) =>
-      console.error('[genesis] error al activar sonido manualmente:', e)
-    )
-    setNecesitaInteraccion(false)
-  }
 
   function detenerSonido() {
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current.currentTime = 0
+      audioRef.current.src = ''
     }
   }
 
-  return { necesitaInteraccion, activarSonido, detenerSonido }
+  return { detenerSonido }
 }
 
 // ── Reloj en tiempo real ─────────────────────────────────────────────────────
@@ -92,7 +80,7 @@ interface Props {
 }
 
 export default function AlarmOverlay({ payload, onDone, onSnooze }: Props) {
-  const { necesitaInteraccion, activarSonido, detenerSonido } = useAlarmAudio(true)
+  const { detenerSonido } = useAlarmAudio(true)
   const hora = useReloj()
 
   function handleDone() {
@@ -119,13 +107,6 @@ export default function AlarmOverlay({ payload, onDone, onSnooze }: Props) {
 
         {payload.description && (
           <p className="alarm-overlay__description">{payload.description}</p>
-        )}
-
-        {/* Fallback visible solo cuando el navegador bloquea el autoplay. */}
-        {necesitaInteraccion && (
-          <button className="alarm-overlay__sound-fallback" onClick={activarSonido}>
-            ▶ ACTIVAR SONIDO
-          </button>
         )}
 
         <div className="alarm-overlay__actions">

@@ -12,6 +12,11 @@ async function getDb(): Promise<Database> {
   return _db
 }
 
+// Canal de invalidación para que acciones externas a RemindersView (alarma,
+// futuras integraciones) notifiquen cambios en la BD sin acoplar directamente
+// los módulos. Cualquier consumidor suscribe 'change' y refresca su estado.
+export const remindersChanged = new EventTarget()
+
 /**
  * Devuelve todos los recordatorios: pendientes primero ordenados por due_at
  * (nulos al final), completados al final ordenados por fecha de creación.
@@ -39,6 +44,7 @@ export async function createReminder(input: NewReminder): Promise<Reminder> {
     'SELECT * FROM reminders WHERE id = ?',
     [result.lastInsertId]
   )
+  remindersChanged.dispatchEvent(new Event('change'))
   return rows[0]
 }
 
@@ -55,6 +61,7 @@ export async function updateReminder(
   const valores = campos.map(c => patch[c] ?? null)
 
   await db.execute(`UPDATE reminders SET ${sets} WHERE id = ?`, [...valores, id])
+  remindersChanged.dispatchEvent(new Event('change'))
 }
 
 export async function toggleReminderCompleted(id: number): Promise<void> {
@@ -63,9 +70,25 @@ export async function toggleReminderCompleted(id: number): Promise<void> {
     'UPDATE reminders SET completed = CASE WHEN completed = 0 THEN 1 ELSE 0 END WHERE id = ?',
     [id]
   )
+  remindersChanged.dispatchEvent(new Event('change'))
+}
+
+// Variante no-toggle para el handler de alarma: siempre fija completed = 1.
+// El recordatorio que dispara la alarma era pendiente por definición, así que
+// el toggle semántico sería incorrecto. El AND completed = 0 hace la operación
+// idempotente: si el handler se ejecuta dos veces (p.ej. por listeners
+// duplicados en Strict Mode), la segunda llamada es un no-op y no revierte nada.
+export async function markReminderCompleted(id: number): Promise<void> {
+  const db = await getDb()
+  await db.execute(
+    'UPDATE reminders SET completed = 1 WHERE id = ? AND completed = 0',
+    [id]
+  )
+  remindersChanged.dispatchEvent(new Event('change'))
 }
 
 export async function deleteReminder(id: number): Promise<void> {
   const db = await getDb()
   await db.execute('DELETE FROM reminders WHERE id = ?', [id])
+  remindersChanged.dispatchEvent(new Event('change'))
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { Reminder, NewReminder } from '../lib/types'
-import { listReminders, createReminder, updateReminder, toggleReminderCompleted, deleteReminder } from '../lib/db'
+import { listReminders, createReminder, updateReminder, toggleReminderCompleted, deleteReminder, remindersChanged } from '../lib/db'
 import { scheduleReminder, cancelReminder } from '../lib/scheduler'
 import ReminderForm from '../components/ReminderForm'
 import ReminderItem from '../components/ReminderItem'
@@ -31,6 +31,15 @@ function RemindersView({ onCambioConteo }: Props) {
 
   useEffect(() => {
     cargar()
+  }, [cargar])
+
+  // Refresca la lista cuando una acción externa a esta vista (alarma, futuras
+  // integraciones) muta la BD. Sin esto los cambios remotos no se reflejan
+  // hasta que el usuario navega fuera y vuelve.
+  useEffect(() => {
+    function onCambio() { cargar() }
+    remindersChanged.addEventListener('change', onCambio)
+    return () => remindersChanged.removeEventListener('change', onCambio)
   }, [cargar])
 
   async function handleCrear(data: NewReminder) {
