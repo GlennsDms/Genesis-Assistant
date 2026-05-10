@@ -29,4 +29,6 @@ serde_json = "1"
 chrono = "0.4"
 # tokio es dep transitiva de Tauri pero no expone la feature `time`; la activamos aquí de forma aditiva.
 tokio = { version = "1", features = ["time"] }
+# Diálogo nativo de selección de archivos (importación .ics).
+tauri-plugin-dialog = "2"
 

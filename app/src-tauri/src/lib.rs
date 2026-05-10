@@ -9,6 +9,7 @@ use tauri::{
 };
 use tauri_plugin_notification::NotificationExt;
 use tauri::Emitter;
+use std::path::Path;
 
 /// Datos que viajan al frontend cuando un recordatorio vence.
 /// El frontend los usa para montar la alarma in-app.
@@ -109,6 +110,49 @@ fn test_notification(app: tauri::AppHandle) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
+/// Lee el contenido textual de un archivo del sistema de archivos local.
+///
+/// Seguridad: aunque hoy solo el frontend controlado llama a este comando,
+/// cualquier comando Tauri es superficie de ataque potencial (extensiones,
+/// WebViews comprometidas, inyección de mensajes IPC). Las dos validaciones
+/// siguientes aplican defensa en profundidad sin coste perceptible:
+///
+///   1. Solo se aceptan rutas que terminen en ".ics" (insensible a mayúsculas)
+///      para minimizar el impacto de un path traversal accidental o malicioso.
+///
+///   2. El archivo se rechaza si supera 10 MB antes de leerlo en memoria.
+///      Leer primero y validar después sería ya el problema: un .ics de 2 GB
+///      agotaría la memoria del proceso.
+#[tauri::command]
+fn read_text_file(path: String) -> Result<String, String> {
+    let ruta = Path::new(&path);
+
+    let extension = ruta
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_lowercase();
+
+    if extension != "ics" {
+        return Err(format!(
+            "Solo se permiten archivos .ics; se recibió extensión: .{extension}"
+        ));
+    }
+
+    let metadata = std::fs::metadata(ruta)
+        .map_err(|e| format!("No se puede acceder al archivo: {e}"))?;
+
+    const LIMITE_BYTES: u64 = 10 * 1024 * 1024; // 10 MB
+    if metadata.len() > LIMITE_BYTES {
+        return Err(format!(
+            "El archivo supera el límite de 10 MB ({} bytes)",
+            metadata.len()
+        ));
+    }
+
+    std::fs::read_to_string(ruta).map_err(|e| format!("Error al leer el archivo: {e}"))
+}
+
 /// Cancela la notificación programada para el recordatorio indicado.
 /// Es una operación idempotente: si no había nada programado, no hace nada.
 #[tauri::command]
@@ -121,26 +165,47 @@ fn cancel_reminder(state: tauri::State<SchedulerState>, id: i64) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // Migración v1: estructura base de recordatorios.
-    // Versionada para que futuras migraciones (v2, v3...) se apliquen solo
-    // sobre instalaciones existentes sin destruir datos del usuario.
-    let migrations = vec![tauri_plugin_sql::Migration {
-        version: 1,
-        description: "crear tabla reminders",
-        sql: "CREATE TABLE IF NOT EXISTS reminders (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            title       TEXT    NOT NULL,
-            description TEXT,
-            due_at      TEXT,
-            completed   INTEGER NOT NULL DEFAULT 0,
-            created_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
-        );",
-        kind: tauri_plugin_sql::MigrationKind::Up,
-    }];
+    // Las migraciones se ejecutan en orden ascendente de versión al arrancar.
+    // Cada versión se aplica una sola vez; las ya aplicadas se omiten sin tocar
+    // los datos existentes. Añadir una nueva migración nunca altera las anteriores.
+    let migrations = vec![
+        tauri_plugin_sql::Migration {
+            version: 1,
+            description: "crear tabla reminders",
+            sql: "CREATE TABLE IF NOT EXISTS reminders (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                title       TEXT    NOT NULL,
+                description TEXT,
+                due_at      TEXT,
+                completed   INTEGER NOT NULL DEFAULT 0,
+                created_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+            );",
+            kind: tauri_plugin_sql::MigrationKind::Up,
+        },
+        tauri_plugin_sql::Migration {
+            version: 2,
+            description: "crear tabla events",
+            sql: "CREATE TABLE IF NOT EXISTS events (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                uid         TEXT    UNIQUE,
+                title       TEXT    NOT NULL,
+                description TEXT,
+                location    TEXT,
+                start_at    TEXT    NOT NULL,
+                end_at      TEXT    NOT NULL,
+                all_day     INTEGER NOT NULL DEFAULT 0,
+                source      TEXT    NOT NULL DEFAULT 'manual',
+                created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+            );
+            CREATE INDEX IF NOT EXISTS idx_events_start ON events(start_at);",
+            kind: tauri_plugin_sql::MigrationKind::Up,
+        },
+    ];
 
     tauri::Builder::default()
         .manage(SchedulerState(Mutex::new(HashMap::new())))
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(
             tauri_plugin_sql::Builder::default()
@@ -199,7 +264,7 @@ pub fn run() {
                 api.prevent_close();
             }
         })
-        .invoke_handler(tauri::generate_handler![schedule_reminder, cancel_reminder, test_notification])
+        .invoke_handler(tauri::generate_handler![schedule_reminder, cancel_reminder, test_notification, read_text_file])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

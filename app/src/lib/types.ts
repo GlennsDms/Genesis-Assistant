@@ -19,3 +19,28 @@ export interface AlarmPayload {
   title: string
   description: string | null
 }
+
+// CalendarEvent (no Event) para no colisionar con el Event global del DOM.
+export interface CalendarEvent {
+  id: number
+  uid: string | null
+  title: string
+  description: string | null
+  location: string | null
+  start_at: string       // ISO 8601 con offset (UTC = '...Z')
+  end_at: string         // ISO 8601 con offset (UTC = '...Z')
+  all_day: number        // 0 | 1, igual que completed en Reminder
+  source: 'manual' | 'ics_import'
+  created_at: string
+}
+
+export interface NewCalendarEvent {
+  uid: string | null
+  title: string
+  description: string | null
+  location: string | null
+  start_at: string
+  end_at: string
+  all_day: number
+  source: 'manual' | 'ics_import'
+}
