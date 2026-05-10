@@ -1,0 +1,33 @@
+.genesis-tooltip {
+  position: fixed;
+  z-index: 8000;
+  pointer-events: none;
+  background: var(--noir);
+  color: var(--bone);
+  box-shadow: 2px 2px 0 var(--blood);
+  padding: 8px 12px;
+  max-width: 220px;
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.genesis-tooltip__titulo {
+  font-family: 'Oswald', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.genesis-tooltip__hora {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: var(--gold);
+  white-space: nowrap;
+}

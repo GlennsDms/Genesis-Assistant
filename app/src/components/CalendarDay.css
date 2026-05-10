@@ -1,0 +1,118 @@
+.cal-day {
+  background: var(--bone);
+  border: 1px solid rgba(10, 10, 10, 0.1);
+  padding: 5px 5px 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, z-index 0s;
+}
+
+.cal-day:hover {
+  transform: scale(1.025);
+  box-shadow: 0 2px 10px rgba(10, 10, 10, 0.12);
+  z-index: 2;
+}
+
+/* Días fuera del mes activo: atenuados para que no compitan visualmente */
+.cal-day--fuera {
+  opacity: 0.35;
+}
+
+/* ── Número de día ─────────────────────────────────────────────────────────── */
+
+.cal-day__numero {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: rgba(10, 10, 10, 0.7);
+  line-height: 1;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Hoy: número dentro de cuadrado rojo sangre */
+.cal-day__numero--hoy {
+  background: var(--blood);
+  color: var(--bone);
+  font-family: 'Anton', sans-serif;
+  font-style: italic;
+  font-size: 12px;
+}
+
+/* ── Contenedor de eventos ─────────────────────────────────────────────────── */
+
+.cal-day__eventos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-height: 0;
+  /* overflow: hidden eliminado — el clipping lo hace .cal-day (el padre).
+     Tener dos overflow:hidden apilados clipeaba pointer-events del tercer
+     ítem (+N MÁS) en ventanas de altura reducida, impidiendo los clicks. */
+}
+
+/* ── Píldora base ──────────────────────────────────────────────────────────── */
+
+.cal-pildora {
+  display: block;
+  width: 100%;
+  background: var(--noir);
+  color: var(--bone);
+  border: none;
+  padding: 2px 5px;
+  cursor: pointer;
+  transform: skewX(-4deg);
+  transition: filter 0.1s ease, transform 0.1s ease;
+  text-align: left;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.cal-pildora:hover {
+  filter: brightness(1.35);
+  transform: skewX(-4deg) scale(1.03);
+}
+
+/* El texto se contra-inclina y recorta con ellipsis */
+.cal-pildora__texto {
+  display: block;
+  transform: skewX(4deg);
+  font-family: 'Oswald', sans-serif;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Evento de día completo: fondo rojo sangre */
+.cal-pildora--allday {
+  background: var(--blood);
+}
+
+/* Contador "+N MÁS": gold sobre noir, abre la lista del día */
+.cal-pildora--mas {
+  background: var(--noir);
+  cursor: pointer;
+}
+
+.cal-pildora--mas:hover {
+  filter: brightness(1.2);
+  transform: skewX(-4deg) scale(1.03);
+}
+
+.cal-pildora--mas .cal-pildora__texto {
+  color: var(--gold);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+}

@@ -109,9 +109,13 @@ export async function deleteReminder(id: number): Promise<void> {
 export async function listEvents(rango?: { from: string; to: string }): Promise<CalendarEvent[]> {
   const db = await getDb()
   if (rango) {
+    // Overlap de intervalos: captura eventos cuyo inicio sea anterior al fin
+    // del rango Y cuyo fin sea posterior al inicio del rango. Esto incluye
+    // eventos que empiezan antes de la ventana pero terminan dentro de ella
+    // (p.ej. evento multi-día que cruza el primer lunes de la cuadrícula).
     return db.select<CalendarEvent[]>(
-      'SELECT * FROM events WHERE start_at >= ? AND start_at <= ? ORDER BY start_at ASC',
-      [rango.from, rango.to]
+      'SELECT * FROM events WHERE start_at < ? AND end_at > ? ORDER BY start_at ASC',
+      [rango.to, rango.from]
     )
   }
   return db.select<CalendarEvent[]>('SELECT * FROM events ORDER BY start_at ASC')

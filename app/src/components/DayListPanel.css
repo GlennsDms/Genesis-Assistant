@@ -1,0 +1,162 @@
+.day-panel {
+  width: 100%;
+  height: 100%;
+  background: var(--bone);
+  border-left: 3px solid var(--blood);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 24px 20px 0;
+}
+
+/* ── Cabecera ──────────────────────────────────────────────────────────────── */
+
+.day-panel__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.day-panel__fecha {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.day-panel__dia-semana {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(10, 10, 10, 0.45);
+}
+
+.day-panel__dia-mes {
+  font-family: 'Anton', sans-serif;
+  font-style: italic;
+  font-size: clamp(20px, 2.2vw, 30px);
+  text-transform: uppercase;
+  color: var(--noir);
+  letter-spacing: 1px;
+  line-height: 1.05;
+}
+
+.day-panel__cerrar {
+  font-family: 'Anton', sans-serif;
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 2px;
+  background: var(--noir);
+  color: var(--bone);
+  border: none;
+  padding: 6px 14px;
+  cursor: pointer;
+  transform: skewX(-8deg);
+  transition: background 0.15s;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.day-panel__cerrar span {
+  display: inline-block;
+  transform: skewX(8deg);
+}
+
+.day-panel__cerrar:hover {
+  background: var(--blood);
+}
+
+/* ── Separador diagonal ────────────────────────────────────────────────────── */
+
+.day-panel__slash {
+  width: 100%;
+  height: 2px;
+  background: var(--blood);
+  transform: skewX(-8deg);
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+/* ── Lista de eventos ──────────────────────────────────────────────────────── */
+
+.day-panel__lista {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── Tarjeta de evento ─────────────────────────────────────────────────────── */
+
+.day-panel__tarjeta {
+  width: 100%;
+  background: white;
+  border: none;
+  border-left: 3px solid var(--noir);
+  padding: 10px 12px;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: border-color 0.12s ease, background 0.12s ease, transform 0.12s ease;
+}
+
+.day-panel__tarjeta:hover {
+  border-left-color: var(--blood);
+  background: var(--bone-dim);
+  transform: translateX(2px);
+}
+
+/* Evento de día completo: borde rojo sangre de partida */
+.day-panel__tarjeta--allday {
+  border-left-color: var(--blood);
+}
+
+.day-panel__tarjeta--allday:hover {
+  border-left-color: var(--blood-dark);
+}
+
+.day-panel__tarjeta-hora {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--gold);
+  /* El gold sobre bone es legible pero sutil; indica la hora sin competir con el título */
+  filter: brightness(0.8);
+}
+
+.day-panel__tarjeta--allday .day-panel__tarjeta-hora {
+  color: var(--blood);
+  filter: none;
+}
+
+.day-panel__tarjeta-titulo {
+  font-family: 'Oswald', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--noir);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.day-panel__tarjeta-lugar {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: rgba(10, 10, 10, 0.45);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
