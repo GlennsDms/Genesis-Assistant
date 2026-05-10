@@ -185,6 +185,10 @@ pub fn run() {
         tauri_plugin_sql::Migration {
             version: 2,
             description: "crear tabla events",
+            // Una sola sentencia por migración: sqlite3_prepare_v2 (usado por sqlx
+            // bajo el capó) solo compila la primera sentencia del string; si detecta
+            // contenido tras el primer ';' devuelve error y sqlx revierte toda la
+            // transacción, dejando _sqlx_migrations sin la fila v2.
             sql: "CREATE TABLE IF NOT EXISTS events (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 uid         TEXT    UNIQUE,
@@ -196,8 +200,13 @@ pub fn run() {
                 all_day     INTEGER NOT NULL DEFAULT 0,
                 source      TEXT    NOT NULL DEFAULT 'manual',
                 created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
-            );
-            CREATE INDEX IF NOT EXISTS idx_events_start ON events(start_at);",
+            )",
+            kind: tauri_plugin_sql::MigrationKind::Up,
+        },
+        tauri_plugin_sql::Migration {
+            version: 3,
+            description: "indice events por start_at",
+            sql: "CREATE INDEX IF NOT EXISTS idx_events_start ON events(start_at)",
             kind: tauri_plugin_sql::MigrationKind::Up,
         },
     ];
