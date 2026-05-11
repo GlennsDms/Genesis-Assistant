@@ -5,7 +5,9 @@
       "Bash(npm install *)",
       "Bash(npx tauri *)",
       "Bash(cargo update *)",
-      "Bash(cargo check *)"
+      "Bash(cargo check *)",
+      "WebFetch(domain:ai.google.dev)",
+      "Bash(Remove-Item \"c:\\\\Users\\\\Gabriel owo\\\\Desktop\\\\Genesis\\\\app\\\\src\\\\lib\\\\ollama.ts\")"
     ]
   }
 }

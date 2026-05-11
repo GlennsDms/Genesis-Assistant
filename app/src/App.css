@@ -388,6 +388,92 @@ body::after {
   vertical-align: middle;
 }
 
+/* ── Tool badge ──────────────────────────────────────────────────────────── */
+
+.tool-badge {
+  display: block;
+  margin-top: 5px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tool-badge--ejecutando {
+  color: var(--gold);
+  animation: pulse-gold 1.2s ease-in-out infinite;
+}
+
+.tool-badge--exito {
+  color: var(--gold);
+  animation: fadeout-badge 2s forwards;
+}
+
+.tool-badge--error {
+  color: var(--blood);
+}
+
+@keyframes pulse-gold {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+@keyframes fadeout-badge {
+  0%   { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ── Missing API key ─────────────────────────────────────────────────── */
+
+.missing-key-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 20px;
+  background: var(--bone);
+  border: 2px dashed var(--blood);
+  text-align: center;
+}
+
+.missing-key-icono {
+  font-size: 28px;
+}
+
+.missing-key-titulo {
+  font-family: 'Anton', sans-serif;
+  font-size: 15px;
+  font-style: italic;
+  letter-spacing: 2px;
+  color: var(--noir);
+}
+
+.missing-key-texto {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--noir);
+  opacity: 0.75;
+}
+
+.missing-key-btn {
+  font-family: 'Anton', sans-serif;
+  font-size: 11px;
+  font-style: italic;
+  letter-spacing: 2px;
+  padding: 6px 18px;
+  background: var(--blood);
+  color: var(--bone);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.missing-key-btn:hover {
+  background: var(--blood-dark);
+}
+
 /* =====================================================================
    Vistas placeholder
    ===================================================================== */
@@ -813,4 +899,211 @@ body::after {
   text-align: center;
   max-width: 360px;
   line-height: 1.7;
+}
+
+/* =====================================================================
+   Vista Ajustes
+   ===================================================================== */
+
+.settings-view {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: var(--bone);
+  overflow-y: auto;
+  padding: 40px 48px;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid var(--bone-dim);
+  margin-bottom: 40px;
+}
+
+.settings-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.settings-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-acento {
+  width: 4px;
+  height: 22px;
+  background: var(--blood);
+  transform: skewX(-8deg);
+  flex-shrink: 0;
+}
+
+.settings-titulo {
+  font-family: 'Anton', sans-serif;
+  font-size: 18px;
+  font-style: italic;
+  letter-spacing: 2px;
+  color: var(--noir);
+}
+
+.settings-key-guardada {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-key-valor {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--noir);
+  opacity: 0.7;
+}
+
+.settings-key-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.settings-input {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--bone-dim);
+  background: var(--bone);
+  color: var(--noir);
+  outline: none;
+  flex: 1;
+  min-width: 200px;
+  transition: border-color 0.15s;
+}
+
+.settings-input:focus {
+  border-color: var(--blood);
+}
+
+.settings-btn {
+  font-family: 'Anton', sans-serif;
+  font-size: 11px;
+  font-style: italic;
+  letter-spacing: 2px;
+  padding: 8px 16px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  white-space: nowrap;
+}
+
+.settings-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.settings-btn--primary {
+  background: var(--blood);
+  color: var(--bone);
+}
+
+.settings-btn--primary:not(:disabled):hover {
+  background: var(--blood-dark);
+}
+
+.settings-btn--ghost {
+  background: transparent;
+  color: var(--noir);
+  border: 1.5px solid var(--bone-dim);
+}
+
+.settings-btn--ghost:hover {
+  border-color: var(--blood);
+  color: var(--blood);
+}
+
+.settings-btn--danger {
+  background: transparent;
+  color: var(--blood);
+  border: 1.5px solid var(--blood);
+}
+
+.settings-btn--danger:hover {
+  background: var(--blood);
+  color: var(--bone);
+}
+
+.settings-feedback {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.settings-feedback--ok {
+  color: #2d8a4e;
+}
+
+.settings-feedback--error {
+  color: var(--blood);
+}
+
+.settings-instrucciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--bone-dim);
+  border-left: 3px solid var(--blood);
+  opacity: 0.85;
+}
+
+.settings-mono {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--noir);
+  margin: 0;
+}
+
+.settings-lista {
+  padding-left: 20px;
+  margin: 4px 0 0 0;
+}
+
+.settings-lista li {
+  margin-bottom: 4px;
+}
+
+.settings-link {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--blood);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.settings-link:hover {
+  color: var(--blood-dark);
+}
+
+.settings-aviso-titulo {
+  margin-top: 8px;
+}
+
+.settings-aviso-texto {
+  opacity: 0.7;
+}
+
+.settings-import-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
 }

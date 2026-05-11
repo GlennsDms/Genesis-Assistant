@@ -171,7 +171,7 @@ function App() {
 
   function renderVista() {
     switch (vistaActiva) {
-      case 'hoy':           return <HomeView userName={userName} pendingCount={pendingCount} />
+      case 'hoy':           return <HomeView userName={userName} pendingCount={pendingCount} onIrAjustes={() => setVistaActiva('ajustes')} />
       case 'calendario':    return <CalendarView />
       case 'recordatorios': return <RemindersView onCambioConteo={refrescarConteo} />
       case 'horarios':      return <ScheduleView />

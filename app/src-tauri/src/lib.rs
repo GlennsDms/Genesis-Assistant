@@ -209,6 +209,17 @@ pub fn run() {
             sql: "CREATE INDEX IF NOT EXISTS idx_events_start ON events(start_at)",
             kind: tauri_plugin_sql::MigrationKind::Up,
         },
+        tauri_plugin_sql::Migration {
+            version: 4,
+            description: "tabla app_settings para configuracion clave-valor",
+            // Una sola sentencia, igual que v2/v3: sqlx solo ejecuta la primera.
+            sql: "CREATE TABLE IF NOT EXISTS app_settings (
+                key        TEXT PRIMARY KEY,
+                value      TEXT NOT NULL,
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            )",
+            kind: tauri_plugin_sql::MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()
