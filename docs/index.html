@@ -823,6 +823,18 @@
   .dl-card:nth-child(2):hover,
   .dl-card:nth-child(3):hover { transform: rotate(0) translate(-4px, -4px); }
 
+  .dl-card--soon {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  .dl-card--soon:hover {
+    transform: rotate(0) scale(1);
+  }
+  .dl-card--soon .dl-os-cta {
+    color: var(--bone-dim, #888);
+  }
+
   .dl-os-icon {
     width: 48px; height: 48px;
     margin-bottom: 18px;
@@ -1271,13 +1283,19 @@
       </div>
     </div>
     <p class="section-desc">
-      Ejecutables firmados para las tres plataformas. Un solo click,
-      sin instaladores ofuscados. Tamaño aprox. 18 MB.
+      Disponible para Windows ahora. macOS y Linux en construcción.
+      Tamaño aprox. 5 MB.
+      <br><br>
+      <small style="opacity:.7">
+        ▸ Aviso: Genesis no está firmado con certificado comercial.
+        Windows mostrará "Más información → Ejecutar de todos modos" la primera vez.
+        Es seguro: el código es <a href="https://github.com/GlennsDms/Genesis-Assistant" style="color:var(--blood); text-decoration:underline;">open source y auditable</a>.
+      </small>
     </p>
   </div>
 
   <div class="download-grid">
-    <a href="#" class="dl-card">
+    <a href="https://github.com/GlennsDms/Genesis-Assistant/releases/download/v0.1.0/Genesis.Assistant_0.1.0_x64-setup.exe" class="dl-card" download>
       <svg class="dl-os-icon" viewBox="0 0 24 24" fill="currentColor">
         <path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z"/>
       </svg>
@@ -1285,21 +1303,21 @@
       <div class="dl-os-detail">.exe · 10/11 · 64-bit</div>
       <div class="dl-os-cta">Descargar ↗</div>
     </a>
-    <a href="#" class="dl-card">
+    <a href="#" class="dl-card dl-card--soon" onclick="return false;">
       <svg class="dl-os-icon" viewBox="0 0 24 24" fill="currentColor">
         <path d="M17.5 12.5c0-2.4 2-3.5 2-3.5s-1.1-1.6-2.8-1.7c-1.2-.1-2.4.7-3 .7-.6 0-1.6-.7-2.7-.7-1.4 0-2.7.8-3.4 2.1-1.5 2.6-.4 6.4 1 8.5.7 1 1.5 2.2 2.6 2.1 1 0 1.4-.7 2.7-.7s1.6.7 2.7.7c1.1 0 1.8-1 2.5-2 .8-1.2 1.1-2.3 1.1-2.4-.1 0-2.1-.8-2.7-3.1zM14.7 5.6c.6-.7 1-1.7.9-2.6-.8 0-1.8.5-2.4 1.2-.5.6-1 1.6-.9 2.5.9 0 1.8-.5 2.4-1.1z"/>
       </svg>
       <div class="dl-os-name">macOS</div>
       <div class="dl-os-detail">.dmg · 12+ · ARM/Intel</div>
-      <div class="dl-os-cta">Descargar ↗</div>
+      <div class="dl-os-cta">Próximamente</div>
     </a>
-    <a href="#" class="dl-card">
+    <a href="#" class="dl-card dl-card--soon" onclick="return false;">
       <svg class="dl-os-icon" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 2C7 2 6 7 7 12c-1 1-3 4-3 6 0 1 1 2 2 2h12c1 0 2-1 2-2 0-2-2-5-3-6 1-5 0-10-5-10zm-2 7c0-1 1-2 2-2s2 1 2 2-1 1-2 1-2 0-2-1z"/>
       </svg>
       <div class="dl-os-name">Linux</div>
       <div class="dl-os-detail">.AppImage · .deb · .rpm</div>
-      <div class="dl-os-cta">Descargar ↗</div>
+      <div class="dl-os-cta">Próximamente</div>
     </a>
   </div>
 </section>
