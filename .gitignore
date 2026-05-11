@@ -18,8 +18,11 @@ npm-debug.log*
 .env.local
 .env.*.local
 
-# IDE
-.vscode/
+# IDE — VS Code 
+.vscode/*
+!.vscode/extensions.json
+
+# IDE — otros
 .idea/
 *.swp
 *.swo
@@ -33,4 +36,6 @@ desktop.ini
 *.tmp
 *.bak
 
-CLAUDE.MD
+# Contexto de Claude 
+CLAUDE.md
+.claude/
