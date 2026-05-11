@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GENESIS — El despertar de tu asistente</title>
+<title>GENESIS — Roba tu tiempo de vuelta</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Oswald:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -82,7 +82,6 @@
     font-style: italic;
     display: flex;
     align-items: center;
-    gap: 10px;
   }
   .nav-logo span { color: var(--blood); }
   .nav-logo::before {
@@ -91,6 +90,7 @@
     width: 14px; height: 14px;
     background: var(--blood);
     transform: rotate(45deg);
+    margin-right: 10px;
   }
 
   .nav-links {
@@ -232,15 +232,6 @@
     to   { transform: translateY(0) skewY(0); opacity: 1; }
   }
 
-  .hero-title .stamp {
-    display: inline-block;
-    background: var(--blood);
-    color: var(--bone);
-    padding: 0 12px;
-    margin-left: 6px;
-    transform: rotate(-3deg);
-  }
-
   .hero-sub {
     font-family: 'Oswald', sans-serif;
     font-weight: 400;
@@ -330,7 +321,7 @@
     clip-path: polygon(8% 4%, 96% 0, 100% 92%, 4% 100%);
   }
   .mask-frame::after {
-    content: 'EXPEDIENTE 01:01';
+    content: 'ID 01:01';
     position: absolute;
     top: 16px; left: 24px;
     color: var(--bone);
@@ -1052,13 +1043,13 @@
       <h1 class="hero-title">
         <span class="line"><span>ROBA TU</span></span>
         <span class="line"><span>TIEMPO</span></span>
-        <span class="line"><span>DE VUELTA<span class="stamp">!</span></span></span>
+        <span class="line"><span>DE VUELTA</span></span>
       </h1>
 
       <p class="hero-sub">
-        GENESIS es el <strong>despertar</strong> de tu asistente: gestiona recordatorios, calendario,
-        horarios y tareas desde una IA local que vive en tu escritorio. Privado, gratuito,
-        y con la cara de los <em>Phantom Thieves</em>.
+        GENESIS combina <strong>recordatorios, calendario y chat IA</strong>
+        en una app de escritorio open source. Tu API gratuita de Gemini,
+        tus datos en tu PC, cero suscripciones.
       </p>
 
       <div class="hero-ctas">
@@ -1069,10 +1060,10 @@
 
     <div class="hero-art">
       <div class="mask-frame"></div>
-      <span class="mask-tag mask-tag-1">CODENAME · GENESIS</span>
-      <span class="mask-tag mask-tag-2">★ TARGET ACQUIRED</span>
+      <span class="mask-tag mask-tag-1">v0.1 · BUILD 0451</span>
+      <span class="mask-tag mask-tag-2">★ OPEN SOURCE</span>
       <svg class="mask-svg" viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg">
-        <!-- domino mask shape inspired by, but distinct from, joker's -->
+        <!-- abstract geometric mask: pure design, no IP reference -->
         <defs>
           <linearGradient id="maskGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stop-color="#faf6ee"/>
@@ -1112,10 +1103,10 @@
 <!-- =================== MARQUEE =================== -->
 <div class="marquee">
   <div class="marquee-track">
-    <span>RECORDATORIOS</span><span>CALENDARIO</span><span>IA LOCAL</span><span>OPEN SOURCE</span>
-    <span>HORARIOS</span><span>PRIVACIDAD TOTAL</span><span>GRATIS</span>
-    <span>RECORDATORIOS</span><span>CALENDARIO</span><span>IA LOCAL</span><span>OPEN SOURCE</span>
-    <span>HORARIOS</span><span>PRIVACIDAD TOTAL</span><span>GRATIS</span>
+    <span>RECORDATORIOS</span><span>CALENDARIO</span><span>IA GRATUITA</span><span>OPEN SOURCE</span>
+    <span>NOTIFICACIONES NATIVAS</span><span>TUS DATOS, TU CONTROL</span><span>MULTIPLATAFORMA</span>
+    <span>RECORDATORIOS</span><span>CALENDARIO</span><span>IA GRATUITA</span><span>OPEN SOURCE</span>
+    <span>NOTIFICACIONES NATIVAS</span><span>TUS DATOS, TU CONTROL</span><span>MULTIPLATAFORMA</span>
   </div>
 </div>
 
@@ -1191,14 +1182,15 @@
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
       </svg>
       <div class="mission-num"><small>MIS-04</small>04</div>
-      <h3 class="mission-name">Chat IA 100% local</h3>
+      <h3 class="mission-name">Chat IA con tu API gratuita</h3>
       <p class="mission-desc">
-        Corre sobre Ollama: tus conversaciones nunca salen del PC.
-        Cero API keys, cero coste, cero compañía leyendo tus datos.
+        Genesis se conecta a Gemini de Google con la API key gratuita
+        que tú generas en 30 segundos. Sin suscripciones, sin tarjeta,
+        sin caducidad. Tu clave, tu control.
       </p>
       <div class="mission-tags">
-        <span class="mission-tag">Ollama</span>
-        <span class="mission-tag">Llama 3.2 · Phi-3</span>
+        <span class="mission-tag">Gemini 2.5 Flash</span>
+        <span class="mission-tag">BYOK</span>
       </div>
     </div>
   </div>
@@ -1215,8 +1207,8 @@
       </div>
     </div>
     <p class="section-desc">
-      Inspirada en los menús de los Phantom Thieves: tipografía italic,
-      diagonales rojas, y todo a un click.
+      Tipografía italic, slashes diagonales, sin distracciones.
+      Toda la información a un click.
     </p>
   </div>
 
@@ -1237,7 +1229,7 @@
         <div class="app-side-item">Ajustes</div>
       </aside>
       <main class="app-main">
-        <h3 class="app-greeting">Buenas tardes, <span>Joker</span>.</h3>
+        <h3 class="app-greeting">Buenas tardes, <span>Alex</span>.</h3>
         <p class="app-subgreeting">Miércoles · 29 abril · 14:32</p>
 
         <div class="app-cards">
@@ -1257,10 +1249,10 @@
 
         <div class="app-chat">
           <div class="chat-msg user" data-from="USR ▸">Recuérdame revisar el PR a las 18:00.</div>
-          <div class="chat-msg" data-from="GEN ▸">Hecho. Te avisaré a las 18:00 sobre revisar el PR. ¿Algo más, Joker?</div>
+          <div class="chat-msg" data-from="GEN ▸">Hecho. Te avisaré a las 18:00 sobre revisar el PR. ¿Algo más?</div>
           <div class="chat-input">
             <span style="color: var(--blood); font-family: 'DM Mono', monospace;">▸</span>
-            <input class="chat-input-field" placeholder="Habla con tu phantom...">
+            <input class="chat-input-field" placeholder="Escribe un mensaje...">
           </div>
         </div>
       </main>
@@ -1314,7 +1306,7 @@
 
 <!-- =================== STACK / OPEN SOURCE =================== -->
 <section class="stack" id="stack">
-  <div class="stack-eyebrow">★ EXPEDIENTE TÉCNICO · 04</div>
+  <div class="stack-eyebrow">★ STACK TÉCNICO · 04</div>
   <h2 class="stack-title">Construido a mano,<br><span>libre para siempre.</span></h2>
   <p class="stack-desc">
     Sin trampas, sin SaaS oculto. Todo el código vive en GitHub bajo licencia MIT,
@@ -1325,7 +1317,7 @@
     <div class="stack-item"><span>01</span>Tauri</div>
     <div class="stack-item"><span>02</span>React + TypeScript</div>
     <div class="stack-item"><span>03</span>Rust</div>
-    <div class="stack-item"><span>04</span>Ollama</div>
+    <div class="stack-item"><span>04</span>Gemini API</div>
     <div class="stack-item"><span>05</span>SQLite</div>
     <div class="stack-item"><span>06</span>iCal</div>
   </div>
@@ -1340,13 +1332,13 @@
   <div class="foot-top">
     <div class="foot-brand">GENESI<span>S</span></div>
     <div class="foot-tagline">
-      Inspirado en Persona 5.<br>
-      No afiliado a Atlus / SEGA.<br>
-      © 2026 — MIT License
+      Open source bajo licencia MIT.<br>
+      Hecho con curiosidad y café.<br>
+      © 2026 — Todos los derechos del proyecto.
     </div>
   </div>
   <div class="foot-bot">
-    <div>★ MADE BY THE PHANTOM CREW</div>
+    <div>★ OPEN SOURCE · MIT LICENSE</div>
     <div>v0.1.0 · BUILD 0451</div>
     <div>HECHO EN MADRID</div>
   </div>
