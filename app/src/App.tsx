@@ -15,13 +15,27 @@ import AlarmOverlay from './components/AlarmOverlay'
 import { useAudioUnlock } from './hooks/useAudioUnlock'
 import { listReminders, markReminderCompleted, updateReminder } from './lib/db'
 import { scheduleReminder, cancelReminder } from './lib/scheduler'
+import { getSetting, setSetting, SETTING_KEYS } from './lib/settings'
 
 function App() {
-  // El nombre persiste en localStorage; la función de inicialización solo se ejecuta una vez.
-  const [userName, setUserName] = useState<string>(
-    () => localStorage.getItem('genesis_username') ?? ''
-  )
+  // null = cargando desde BD; '' = sin nombre (onboarding); string = app lista.
+  const [userName, setUserName] = useState<string | null>(null)
   const [vistaActiva, setVistaActiva] = useState<Vista>('hoy')
+
+  // Migración única: mueve genesis_username de localStorage a app_settings y carga el valor.
+  useEffect(() => {
+    async function cargarNombre() {
+      const legacy = localStorage.getItem('genesis_username')
+      if (legacy) {
+        const existente = await getSetting(SETTING_KEYS.USER_NAME)
+        if (!existente) await setSetting(SETTING_KEYS.USER_NAME, legacy)
+        localStorage.removeItem('genesis_username')
+      }
+      const nombre = await getSetting(SETTING_KEYS.USER_NAME)
+      setUserName(nombre ?? '')
+    }
+    cargarNombre()
+  }, [])
 
   // El conteo de pendientes se refresca cuando el usuario vuelve al dashboard.
   // Inicializamos con null para distinguir "sin cargar aún" de "cero recordatorios".
@@ -158,11 +172,13 @@ function App() {
 
   // ─────────────────────────────────────────────────────────────────────────
 
+  if (userName === null) return null
+
   if (!userName) {
     return (
       <OnboardingScreen
-        onComplete={(nombre) => {
-          localStorage.setItem('genesis_username', nombre)
+        onComplete={async (nombre) => {
+          await setSetting(SETTING_KEYS.USER_NAME, nombre)
           setUserName(nombre)
         }}
       />
@@ -171,7 +187,7 @@ function App() {
 
   function renderVista() {
     switch (vistaActiva) {
-      case 'hoy':           return <HomeView userName={userName} pendingCount={pendingCount} onIrAjustes={() => setVistaActiva('ajustes')} />
+      case 'hoy':           return <HomeView userName={userName!} pendingCount={pendingCount} onIrAjustes={() => setVistaActiva('ajustes')} />
       case 'calendario':    return <CalendarView />
       case 'recordatorios': return <RemindersView onCambioConteo={refrescarConteo} />
       case 'horarios':      return <ScheduleView />

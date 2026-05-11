@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Genesis",
+  "productName": "Genesis Assistant",
   "version": "0.1.0",
   "identifier": "com.genesis.assistant",
   "build": {
@@ -13,9 +13,11 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "Genesis",
-        "width": 800,
-        "height": 600
+        "title": "Genesis Assistant",
+        "width": 1100,
+        "height": 720,
+        "minWidth": 900,
+        "minHeight": 600
       }
     ],
     "security": {
@@ -24,7 +26,12 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["nsis"],
+    "publisher": "Genesis Project",
+    "category": "Productivity",
+    "shortDescription": "Asistente personal con calendario, recordatorios e IA local.",
+    "longDescription": "Genesis es un asistente personal de escritorio open source. Combina recordatorios con notificaciones nativas, calendario con import .ics, alarmas a pantalla completa, y chat con IA conectado a tu API key gratuita de Gemini. Tus datos viven en tu PC.",
+    "copyright": "© 2026 Genesis Project. MIT License.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

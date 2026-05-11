@@ -4,6 +4,7 @@ import Database from '@tauri-apps/plugin-sql'
 // Añadir aquí cualquier setting futuro.
 export const SETTING_KEYS = {
   GEMINI_API_KEY: 'gemini.api_key',
+  USER_NAME: 'user.name',
 } as const
 
 // Canal de invalidación equivalente a remindersChanged / eventsChanged.
