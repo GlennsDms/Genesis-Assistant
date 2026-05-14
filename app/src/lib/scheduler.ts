@@ -36,3 +36,18 @@ export async function cancelReminder(id: number): Promise<void> {
     console.error('[genesis] fallo al cancelar notificación del recordatorio', id, e)
   }
 }
+
+/**
+ * Rehidrata el scheduler al arranque: el backend lee la BD directamente y
+ * reprograma los tokio tasks de todos los recordatorios pendientes con due_at
+ * futuro. Debe llamarse una vez que la BD ya está abierta (después del primer
+ * getDb()) y antes de materializeEventsForToday.
+ */
+export async function rehydrateAlarms(): Promise<void> {
+  try {
+    const n = await invoke<number>('rehydrate_alarms')
+    console.log(`[genesis] rehydrate_alarms: ${n} recordatorios rehidratados`)
+  } catch (e) {
+    console.error('[genesis] fallo en rehydrate_alarms:', e)
+  }
+}

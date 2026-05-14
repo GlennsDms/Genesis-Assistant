@@ -4,6 +4,7 @@ export interface Reminder {
   description: string | null
   due_at: string | null
   completed: number   // SQLite no tiene booleanos nativos; 0 = pendiente, 1 = completado
+  source_event_id: number | null  // null = recordatorio manual; número = derivado del evento con ese id
   created_at: string
 }
 

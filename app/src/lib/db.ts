@@ -1,5 +1,6 @@
 import Database from '@tauri-apps/plugin-sql'
 import type { Reminder, NewReminder, CalendarEvent, NewCalendarEvent } from './types'
+import { scheduleReminder, cancelReminder } from './scheduler'
 
 // La instancia se inicializa una vez y se reutiliza. Las migraciones
 // se ejecutan automáticamente en el primer arranque gracias al plugin.
@@ -8,8 +9,22 @@ let _db: Database | null = null
 async function getDb(): Promise<Database> {
   if (!_db) {
     _db = await Database.load('sqlite:genesis.db')
+    // PRAGMA foreign_keys debe activarse por conexión: no persiste entre sesiones
+    // y no puede ir en una migración porque sqlx ejecuta cada migración dentro de
+    // una transacción y los PRAGMA se ignoran en ese contexto. Activarlo aquí
+    // garantiza que ON DELETE CASCADE funcione durante toda la vida del singleton.
+    await _db.execute('PRAGMA foreign_keys = ON', [])
   }
   return _db
+}
+
+// tauri-plugin-sql abre la conexión de forma lazy: DbInstances (estado Rust del
+// plugin) no registra la BD hasta que el frontend llama a Database.load() por
+// primera vez. rehydrate_alarms necesita que esa entrada exista para poder
+// leer recordatorios. Llamar a openDb() antes de invocar rehydrate_alarms
+// garantiza que la conexión está lista y el PRAGMA foreign_keys activado.
+export async function openDb(): Promise<void> {
+  await getDb()
 }
 
 // Canal de invalidación para que acciones externas a RemindersView (alarma,
@@ -139,6 +154,83 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   }
 }
 
+// ─── Materialización de eventos como recordatorios ───────────────────────────
+
+// Calcula el due_at que debe tener el recordatorio derivado de un evento.
+// Para all-day: 09:00 hora local del día del evento. Usamos la fecha del evento
+// (no 'now') para que el cálculo sea correcto si en el futuro se materializan
+// días distintos al actual. new Date sin offset trata el string como hora local,
+// y toISOString() devuelve el equivalente UTC que acepta el parser RFC 3339 de Rust.
+// Para eventos con hora: due_at = start_at del evento, que ya incluye offset.
+function calcularDueAt(evento: CalendarEvent): string {
+  if (evento.all_day === 1) {
+    const fecha = evento.start_at.slice(0, 10) // 'YYYY-MM-DD' sea cual sea el formato original
+    return new Date(`${fecha}T09:00:00`).toISOString()
+  }
+  return evento.start_at
+}
+
+// Compara la fecha local de un string ISO con la fecha local actual.
+// Equivale a DATE(col, 'localtime') = DATE('now', 'localtime') en SQLite:
+// Date() respeta el offset del string, y getFullYear/Month/Date operan en local.
+function esHoy(isoDate: string): boolean {
+  const d = new Date(isoDate)
+  const h = new Date()
+  return d.getFullYear() === h.getFullYear() &&
+    d.getMonth()         === h.getMonth()    &&
+    d.getDate()          === h.getDate()
+}
+
+// Crea el recordatorio derivado de un evento si no existe ya uno para él.
+// Compartido entre materializeEventsForToday (arranque) y el hook de createEvent,
+// así que ambos caminos pasan por la misma lógica sin duplicar código.
+async function materializarEvento(db: Database, evento: CalendarEvent): Promise<void> {
+  const existentes = await db.select<{ id: number }[]>(
+    'SELECT id FROM reminders WHERE source_event_id = ?',
+    [evento.id]
+  )
+  if (existentes.length > 0) return
+
+  const due_at = calcularDueAt(evento)
+  // Skip silencioso: si el due_at ya pasó no tiene sentido crear el recordatorio.
+  // Aplica tanto a all-day (09:00 fija que ya pasó) como a eventos con hora cuya
+  // hora ha transcurrido en el momento de materializar. do_schedule_reminder lo
+  // rechazaría de todas formas, pero insertarlo en BD generaría un registro
+  // pendiente inutilizable que confundiría la vista de recordatorios.
+  if (new Date(due_at) <= new Date()) {
+    console.log(`[genesis] materializarEvento: skip evento ${evento.id} — due_at ya pasó (${due_at})`)
+    return
+  }
+
+  const result = await db.execute(
+    'INSERT INTO reminders (title, description, due_at, source_event_id) VALUES (?, ?, ?, ?)',
+    [evento.title, evento.description, due_at, evento.id]
+  )
+  const rows = await db.select<Reminder[]>(
+    'SELECT * FROM reminders WHERE id = ?',
+    [result.lastInsertId]
+  )
+  remindersChanged.dispatchEvent(new Event('change'))
+  // schedule_reminder cancela internamente cualquier tarea previa para el mismo id
+  // (ver lib.rs:92-96), por lo que la llamada es idempotente si se ejecuta más de una vez.
+  await scheduleReminder(rows[0].id, due_at, rows[0].title, rows[0].description)
+}
+
+/**
+ * Lee los eventos cuyo inicio cae en el día local actual y crea un recordatorio
+ * derivado por cada uno que aún no lo tenga. Se llama al arranque desde App.tsx,
+ * justo después de que rehydrate_alarms ha programado los recordatorios existentes.
+ */
+export async function materializeEventsForToday(): Promise<void> {
+  const db = await getDb()
+  const eventosHoy = await db.select<CalendarEvent[]>(
+    "SELECT * FROM events WHERE DATE(start_at, 'localtime') = DATE('now', 'localtime')"
+  )
+  for (const evento of eventosHoy) {
+    await materializarEvento(db, evento)
+  }
+}
+
 // ─── Eventos de calendario ───────────────────────────────────────────────────
 
 /**
@@ -173,7 +265,15 @@ export async function createEvent(input: NewCalendarEvent): Promise<CalendarEven
     [result.lastInsertId]
   )
   eventsChanged.dispatchEvent(new Event('change'))
-  return rows[0]
+
+  const evento = rows[0]
+  // Si el evento recién creado es de hoy, materializar el recordatorio de inmediato
+  // sin esperar al siguiente arranque. esHoy respeta el offset del string ISO.
+  if (esHoy(evento.start_at)) {
+    await materializarEvento(db, evento)
+  }
+
+  return evento
 }
 
 export async function updateEvent(id: number, patch: Partial<CalendarEvent>): Promise<void> {
@@ -188,12 +288,52 @@ export async function updateEvent(id: number, patch: Partial<CalendarEvent>): Pr
 
   await db.execute(`UPDATE events SET ${sets} WHERE id = ?`, [...valores, id])
   eventsChanged.dispatchEvent(new Event('change'))
+
+  // Si existe un recordatorio derivado, sincronizar título, descripción y due_at.
+  const derivados = await db.select<Reminder[]>(
+    'SELECT * FROM reminders WHERE source_event_id = ?',
+    [id]
+  )
+  if (derivados.length > 0) {
+    const recordatorio = derivados[0]
+    // Releer el evento ya actualizado para calcular el due_at con los datos definitivos.
+    const eventoActualizado = await db.select<CalendarEvent[]>(
+      'SELECT * FROM events WHERE id = ?',
+      [id]
+    )
+    if (eventoActualizado.length === 0) return
+    const evento = eventoActualizado[0]
+    const nuevoDueAt = calcularDueAt(evento)
+
+    await db.execute(
+      'UPDATE reminders SET title = ?, description = ?, due_at = ? WHERE id = ?',
+      [evento.title, evento.description, nuevoDueAt, recordatorio.id]
+    )
+    remindersChanged.dispatchEvent(new Event('change'))
+    // schedule_reminder aborta la tarea anterior para el mismo id antes de crear la nueva
+    // (ver lib.rs:92-96), así que no hace falta llamar a cancelReminder por separado.
+    await scheduleReminder(recordatorio.id, nuevoDueAt, evento.title, evento.description)
+  }
 }
 
 export async function deleteEvent(id: number): Promise<void> {
   const db = await getDb()
+
+  // Recuperar el id del recordatorio derivado antes de borrar el evento.
+  // El CASCADE borra la fila de BD automáticamente, pero no cancela el tokio task
+  // en memoria: sin esta llamada quedaría un timer huérfano que dispararía una
+  // notificación de un recordatorio ya inexistente.
+  const derivados = await db.select<{ id: number }[]>(
+    'SELECT id FROM reminders WHERE source_event_id = ?',
+    [id]
+  )
+
   await db.execute('DELETE FROM events WHERE id = ?', [id])
   eventsChanged.dispatchEvent(new Event('change'))
+
+  for (const { id: reminderId } of derivados) {
+    await cancelReminder(reminderId)
+  }
 }
 
 /**
