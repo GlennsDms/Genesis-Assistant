@@ -1,5 +1,6 @@
-import { createEvent } from './db'
-import type { NewCalendarEvent } from './types'
+import { createEvent, createReminder } from './db'
+import { scheduleReminder } from './scheduler'
+import type { NewCalendarEvent, NewReminder } from './types'
 
 export type ToolResult =
   | { ok: true; result: unknown }
@@ -19,13 +20,14 @@ export function normalizarArgs(args: Record<string, unknown>): Record<string, un
 }
 
 // Pre-check puro (sin efectos secundarios) para detectar tool calls de ruido.
-// llama3.2:3b invoca crear_evento con args vacíos en respuestas conversacionales
-// cuando el prompt menciona la herramienta. Condición mínima: title Y start_at ambos
-// nulos — señal de que el modelo no tenía intención real de crear nada.
+// Condición mínima por herramienta:
+//   crear_evento: title Y start_at ambos nulos.
+//   crear_recordatorio: title nulo (es el único campo required; due_at es opcional).
 // Espera args ya normalizados por normalizarArgs.
 export function esToolCallVacio(name: string, args: Record<string, unknown>): boolean {
-  if (name !== 'crear_evento') return false
-  return !args.title && !args.start_at
+  if (name === 'crear_evento') return !args.title && !args.start_at
+  if (name === 'crear_recordatorio') return !args.title
+  return false
 }
 
 interface ValidatedCrearEvento {
@@ -151,8 +153,53 @@ export async function executeTool(
     }
   }
 
+  if (name === 'crear_recordatorio') {
+    const argsNorm = normalizarArgs(args)
+
+    // Defensa en profundidad: por si se invoca sin pasar por el pre-check.
+    if (esToolCallVacio(name, argsNorm)) {
+      return { ok: 'silent_skip', reason: 'tool call vacío del modelo' }
+    }
+
+    if (typeof argsNorm.title !== 'string' || argsNorm.title.trim() === '') {
+      return { ok: false, error: 'El título del recordatorio no puede estar vacío.' }
+    }
+    const title = argsNorm.title.trim()
+
+    // due_at es opcional: un recordatorio sin fecha queda en BD pero no suena.
+    // El schema del tool ya advierte de esto, así que no rechazamos la llamada.
+    const due_at = typeof argsNorm.due_at === 'string' && argsNorm.due_at.trim() !== ''
+      ? argsNorm.due_at.trim()
+      : null
+
+    const description = typeof argsNorm.description === 'string' ? argsNorm.description : null
+
+    const input: NewReminder = { title, description, due_at }
+
+    let creado
+    try {
+      creado = await createReminder(input)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error desconocido al guardar en la base de datos.'
+      return { ok: false, error: `No se pudo guardar el recordatorio: ${msg}` }
+    }
+
+    // Programar la alarma exactamente como lo hace RemindersView.handleCrear:
+    // solo si due_at existe y es futuro. Si scheduleReminder falla (error de IPC
+    // con Rust), el recordatorio ya está en BD; lo registramos pero no abortamos.
+    if (creado.due_at && new Date(creado.due_at) > new Date()) {
+      try {
+        await scheduleReminder(creado.id, creado.due_at, creado.title, creado.description)
+      } catch (err) {
+        console.error('[genesis-tools] fallo al programar alarma del recordatorio', creado.id, err)
+      }
+    }
+
+    return { ok: true, result: creado }
+  }
+
   return {
     ok: false,
-    error: `Herramienta desconocida: "${name}". Solo se admite crear_evento en este momento.`,
+    error: `Herramienta desconocida: "${name}". Solo se admiten crear_evento y crear_recordatorio.`,
   }
 }
