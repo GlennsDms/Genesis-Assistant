@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 
 use chrono::Utc;
+use sqlx::Row;
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
@@ -24,26 +25,23 @@ struct ReminderDuePayload {
 // Usamos tauri::async_runtime::JoinHandle porque spawn() devuelve ese tipo (no tokio directamente).
 struct SchedulerState(Mutex<HashMap<i64, tauri::async_runtime::JoinHandle<()>>>);
 
-/// Programa una notificación nativa para el recordatorio indicado.
-/// Si ya existía una tarea previa para ese id (reprogramación), la cancela antes de crear la nueva.
-/// Si due_at_iso ya venció, no hace nada y devuelve Ok.
-#[tauri::command]
-fn schedule_reminder(
-    state: tauri::State<SchedulerState>,
-    app: tauri::AppHandle,
+// Núcleo compartido del scheduler: parsea due_at, lanza el tokio task y lo
+// registra en el HashMap. Tanto schedule_reminder (comando Tauri) como
+// rehydrate_alarms (rehidratación al arranque) pasan por aquí sin duplicar lógica.
+// Si due_at_iso ya venció devuelve Ok sin lanzar nada.
+fn do_schedule_reminder(
+    state: &tauri::State<'_, SchedulerState>,
+    app: &tauri::AppHandle,
     id: i64,
-    due_at_iso: String,
-    title: String,
-    description: Option<String>,
+    due_at_iso: &str,
+    title: &str,
+    description: &str,
 ) -> Result<(), String> {
-    eprintln!("[genesis] schedule_reminder recibido: id={id} due_at_iso={due_at_iso:?}");
-
-    let due = chrono::DateTime::parse_from_rfc3339(&due_at_iso)
+    let due = chrono::DateTime::parse_from_rfc3339(due_at_iso)
         .map_err(|e| format!("fecha inválida: {e}"))?
         .with_timezone(&Utc);
 
     let diff = due.signed_duration_since(Utc::now());
-    eprintln!("[genesis] diff calculado: {}s ({}ms)", diff.num_seconds(), diff.num_milliseconds());
 
     if diff.num_milliseconds() <= 0 {
         eprintln!("[genesis] recordatorio {id} ya venció — no se programa");
@@ -53,8 +51,8 @@ fn schedule_reminder(
     let millis = diff.num_milliseconds() as u64;
     eprintln!("[genesis] programando recordatorio {id} en {millis}ms");
     let app_clone = app.clone();
-    let titulo = title.clone();
-    let cuerpo = description.unwrap_or_default();
+    let titulo = title.to_string();
+    let cuerpo = description.to_string();
 
     let handle = tauri::async_runtime::spawn(async move {
         tokio::time::sleep(std::time::Duration::from_millis(millis)).await;
@@ -96,6 +94,79 @@ fn schedule_reminder(
     }
 
     Ok(())
+}
+
+/// Programa una notificación nativa para el recordatorio indicado.
+/// Si ya existía una tarea previa para ese id (reprogramación), la cancela antes de crear la nueva.
+/// Si due_at_iso ya venció, no hace nada y devuelve Ok.
+#[tauri::command]
+fn schedule_reminder(
+    state: tauri::State<'_, SchedulerState>,
+    app: tauri::AppHandle,
+    id: i64,
+    due_at_iso: String,
+    title: String,
+    description: Option<String>,
+) -> Result<(), String> {
+    eprintln!("[genesis] schedule_reminder recibido: id={id} due_at_iso={due_at_iso:?}");
+    do_schedule_reminder(&state, &app, id, &due_at_iso, &title, &description.unwrap_or_default())
+}
+
+/// Lee todos los recordatorios pendientes con due_at futuro y reprograma sus
+/// tokio tasks. Se llama desde el frontend al arranque, justo después de que la
+/// BD está abierta, para rehidratar el scheduler tras un reinicio de la app.
+/// Devuelve el número de recordatorios efectivamente programados (los ya
+/// vencidos se omiten en do_schedule_reminder y no cuentan).
+#[tauri::command]
+async fn rehydrate_alarms(
+    state: tauri::State<'_, SchedulerState>,
+    app: tauri::AppHandle,
+    db_instances: tauri::State<'_, tauri_plugin_sql::DbInstances>,
+) -> Result<usize, String> {
+    // Adquirimos el lock de lectura y clonamos la Pool para liberarlo antes de
+    // hacer queries: mantenerlo mientras await-amos causaría un deadlock si otra
+    // tarea intenta escribir en DbInstances al mismo tiempo.
+    let pool = {
+        let lock = db_instances.0.read().await;
+        match lock.get("sqlite:genesis.db") {
+            Some(tauri_plugin_sql::DbPool::Sqlite(p)) => p.clone(),
+            _ => return Err("BD sqlite:genesis.db no disponible todavía".to_string()),
+        }
+    };
+
+    // Filtro SQL de primera aproximación: excluye vencidos y completados.
+    // do_schedule_reminder hace la comprobación precisa con parse_from_rfc3339,
+    // así que si algún due_at con offset quedara mal comparado aquí, el Rust
+    // lo descartará correctamente como vencido.
+    let filas = sqlx::query(
+        "SELECT id, title, description, due_at FROM reminders \
+         WHERE due_at > datetime('now') AND completed = 0",
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let mut rehidratados = 0usize;
+    for fila in &filas {
+        let id: i64 = fila.get("id");
+        let title: String = fila.get("title");
+        let description: Option<String> = fila.get("description");
+        let due_at: String = fila.get("due_at");
+        if do_schedule_reminder(
+            &state,
+            &app,
+            id,
+            &due_at,
+            &title,
+            &description.unwrap_or_default(),
+        )
+        .is_ok()
+        {
+            rehidratados += 1;
+        }
+    }
+    eprintln!("[genesis] rehydrate_alarms: {rehidratados} recordatorios rehidratados");
+    Ok(rehidratados)
 }
 
 /// Dispara una notificación nativa de inmediato, sin delay.
@@ -220,6 +291,16 @@ pub fn run() {
             )",
             kind: tauri_plugin_sql::MigrationKind::Up,
         },
+        tauri_plugin_sql::Migration {
+            version: 5,
+            description: "columna source_event_id en reminders para recordatorios derivados de eventos",
+            // ALTER TABLE ADD COLUMN es válido en SQLite 3.26+ para columnas nullables.
+            // El proyecto usa libsqlite3-sys 0.30.1 que bundlea SQLite ≥ 3.46, así que
+            // esta sintaxis está soportada sin recrear la tabla.
+            // ON DELETE CASCADE se activa por conexión con PRAGMA foreign_keys = ON (ver getDb en db.ts).
+            sql: "ALTER TABLE reminders ADD COLUMN source_event_id INTEGER REFERENCES events(id) ON DELETE CASCADE",
+            kind: tauri_plugin_sql::MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()
@@ -284,7 +365,7 @@ pub fn run() {
                 api.prevent_close();
             }
         })
-        .invoke_handler(tauri::generate_handler![schedule_reminder, cancel_reminder, test_notification, read_text_file])
+        .invoke_handler(tauri::generate_handler![schedule_reminder, cancel_reminder, rehydrate_alarms, test_notification, read_text_file])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

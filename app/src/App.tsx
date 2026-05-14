@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification'
 import { listen } from '@tauri-apps/api/event'
 import type { Vista } from './types'
@@ -12,8 +12,8 @@ import ScheduleView from './views/ScheduleView'
 import SettingsView from './views/SettingsView'
 import AlarmOverlay from './components/AlarmOverlay'
 import { useAudioUnlock } from './hooks/useAudioUnlock'
-import { listReminders, markReminderCompleted, updateReminder } from './lib/db'
-import { scheduleReminder, cancelReminder } from './lib/scheduler'
+import { materializeEventsForToday, markReminderCompleted, updateReminder } from './lib/db'
+import { scheduleReminder, cancelReminder, rehydrateAlarms } from './lib/scheduler'
 import { getSetting, setSetting, SETTING_KEYS } from './lib/settings'
 
 function App() {
@@ -44,47 +44,45 @@ function App() {
   // espera a que el usuario cierre la primera antes de aparecer.
   const [colaAlarmas, setColaAlarmas] = useState<AlarmPayload[]>([])
 
-  // Evita que la inicialización del scheduler se ejecute más de una vez,
-  // incluso en React strict mode (que monta efectos dos veces en desarrollo).
-  const schedulerIniciado = useRef(false)
-
-  // Solicita permiso de notificación y rehidrata el scheduler al arrancar.
-  // Se ejecuta una sola vez en cuanto hay un userName válido (post-onboarding).
+  // Rehidratación y materialización al arranque, sin gate de userName:
+  // los recordatorios y eventos existen independientemente de si el usuario
+  // ha completado el onboarding. El flag cancelled evita actuar si el
+  // componente se desmonta antes de que resuelvan las Promises (React Strict Mode).
+  // Secuencia deliberada: primero rehydrate_alarms (programar los recordatorios
+  // existentes) y luego materializeEventsForToday (crear los derivados de hoy
+  // y programarlos), para no rehidratar dos veces los mismos recordatorios.
   useEffect(() => {
-    if (!userName || schedulerIniciado.current) return
-    schedulerIniciado.current = true
+    let cancelled = false
 
-    async function inicializar() {
-      // Pedir permiso de notificación si todavía no se ha concedido.
+    async function arrancar() {
       try {
-        let concedido = await isPermissionGranted()
-        if (!concedido) {
-          const respuesta = await requestPermission()
-          concedido = respuesta === 'granted'
-        }
+        await rehydrateAlarms()
+        if (cancelled) return
+        await materializeEventsForToday()
       } catch (e) {
-        console.error('[genesis] error al solicitar permiso de notificación:', e)
-      }
-
-      // Rehidratar el scheduler: programa notificaciones para todos los recordatorios
-      // pendientes con fecha futura. Cubre el caso de que la app se haya cerrado y reabierto.
-      try {
-        const ahora = new Date()
-        const todos = await listReminders()
-        const pendientesFuturos = todos.filter(
-          r => r.completed === 0 && r.due_at !== null && new Date(r.due_at) > ahora
-        )
-        await Promise.all(
-          pendientesFuturos.map(r =>
-            scheduleReminder(r.id, r.due_at!, r.title, r.description)
-          )
-        )
-      } catch (e) {
-        console.error('[genesis] error al rehidratar el scheduler:', e)
+        console.error('[genesis] error en arranque del scheduler:', e)
       }
     }
 
-    inicializar()
+    arrancar()
+    return () => { cancelled = true }
+  }, [])
+
+  // Solicita permiso de notificación en cuanto hay un userName válido.
+  // La rehidratación del scheduler ya no vive aquí — se mueve al efecto de arranque.
+  useEffect(() => {
+    if (!userName) return
+
+    async function solicitarPermiso() {
+      try {
+        const concedido = await isPermissionGranted()
+        if (!concedido) await requestPermission()
+      } catch (e) {
+        console.error('[genesis] error al solicitar permiso de notificación:', e)
+      }
+    }
+
+    solicitarPermiso()
   }, [userName])
 
   // Suscripción al evento Tauri emitido por Rust cuando un recordatorio vence.

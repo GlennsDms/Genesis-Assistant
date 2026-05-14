@@ -31,4 +31,9 @@ chrono = "0.4"
 tokio = { version = "1", features = ["time"] }
 # Diálogo nativo de selección de archivos (importación .ics).
 tauri-plugin-dialog = "2"
+# Ya era dep transitiva de tauri-plugin-sql (Cargo.lock: 0.8.6). La declaramos
+# explícita con versión fijada para acceder a Pool<Sqlite> en rehydrate_alarms
+# sin depender de que el plugin la reexporte. Sin esto la rama DbPool::Sqlite(p)
+# no es tipeable desde nuestro crate.
+sqlx = { version = "=0.8.6", features = ["sqlite"] }
 
