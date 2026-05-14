@@ -19,7 +19,7 @@ import { getSetting, setSetting, SETTING_KEYS } from './lib/settings'
 function App() {
   // null = cargando desde BD; '' = sin nombre (onboarding); string = app lista.
   const [userName, setUserName] = useState<string | null>(null)
-  const [vistaActiva, setVistaActiva] = useState<Vista>('hoy')
+  const [vistaActiva, setVistaActiva] = useState<Vista>('asistente')
 
   // Migración única: mueve genesis_username de localStorage a app_settings y carga el valor.
   useEffect(() => {
@@ -61,9 +61,9 @@ function App() {
     }
   }, [])
 
-  // Refresca el conteo cada vez que el usuario navega a la vista "hoy".
+  // Refresca el conteo cada vez que el usuario navega a la vista "asistente".
   useEffect(() => {
-    if (vistaActiva === 'hoy') {
+    if (vistaActiva === 'asistente') {
       refrescarConteo()
     }
   }, [vistaActiva, refrescarConteo])
@@ -186,7 +186,7 @@ function App() {
 
   function renderVista() {
     switch (vistaActiva) {
-      case 'hoy':           return <HomeView userName={userName!} pendingCount={pendingCount} onIrAjustes={() => setVistaActiva('ajustes')} />
+      case 'asistente':     return <HomeView userName={userName!} pendingCount={pendingCount} onIrAjustes={() => setVistaActiva('ajustes')} />
       case 'calendario':    return <CalendarView />
       case 'recordatorios': return <RemindersView onCambioConteo={refrescarConteo} />
       case 'horarios':      return <ScheduleView />
