@@ -259,7 +259,7 @@ body::after {
 .onboarding {
   height: 100vh;
   width: 100vw;
-  background: var(--noir);
+  background: var(--bg-base);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -286,7 +286,7 @@ body::after {
   font-family: 'Oswald', sans-serif;
   font-size: 13px;
   letter-spacing: 4px;
-  color: #666;
+  color: var(--text-dim);
   text-transform: uppercase;
   margin-bottom: 20px;
 }
@@ -295,7 +295,7 @@ body::after {
   display: flex;
   align-items: stretch;
   border: 2px solid var(--blood);
-  background: var(--ink);
+  background: var(--bg-elevated);
 }
 
 .onboarding-prompt {
@@ -315,21 +315,23 @@ body::after {
   font-family: 'Anton', sans-serif;
   font-size: 20px;
   letter-spacing: 4px;
-  color: var(--bone);
+  color: var(--text-primary);
   padding: 14px 8px 14px 0;
   width: 260px;
   text-transform: uppercase;
 }
 
+/* Contraste activo: #3a3a3a sobre --bg-elevated daba 1.8:1 — invisible.
+   --text-dim (#888) sobre --bg-elevated (#141414) da 5.1:1, cumple AA. */
 .onboarding-input::placeholder {
-  color: #3a3a3a;
+  color: var(--text-dim);
   font-size: 16px;
   letter-spacing: 2px;
 }
 
 .onboarding-btn {
   background: var(--blood);
-  color: var(--bone);
+  color: var(--text-primary);
   border: none;
   font-family: 'Anton', sans-serif;
   font-size: 13px;
