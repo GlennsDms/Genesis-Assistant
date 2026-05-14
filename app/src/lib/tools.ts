@@ -70,8 +70,33 @@ const crearEventoDeclaration: GeminiFunctionDeclaration = {
   },
 }
 
-// Único array de tools activo en este sub-hito.
-// Gemini lo recibe como: tools: GENESIS_TOOLS
+const crearRecordatorioDeclaration: GeminiFunctionDeclaration = {
+  name: 'crear_recordatorio',
+  description:
+    'Crea un recordatorio que Genesis avisa al usuario en la fecha y hora indicadas. Úsala cuando el usuario pida que se le recuerde algo o que se le avise a una hora concreta — un aviso puntual que no ocupa franja horaria en el calendario. Si el usuario menciona una hora específica, inclúyela en due_at. Si no da hora, pregúntale antes de invocar.',
+  parameters: {
+    type: 'object',
+    properties: {
+      title: {
+        type: 'string',
+        description: 'Título del recordatorio, descriptivo y conciso. Obligatorio.',
+      },
+      due_at: {
+        type: 'string',
+        description:
+          'Fecha y hora del aviso en formato ISO 8601 con offset de zona horaria. Ejemplo: 2026-05-16T20:00:00+02:00. Sin este campo no hay alarma.',
+      },
+      description: {
+        type: 'string',
+        description: 'Contexto o nota adicional. Omite el campo si no hay información extra.',
+      },
+    },
+    required: ['title'],
+  },
+}
+
+// Único array de tools activo. Ambas declarations van en el mismo objeto GeminiTool
+// para que Gemini las trate como un conjunto cohesivo y pueda elegir entre ellas.
 export const GENESIS_TOOLS: GeminiTool[] = [
-  { functionDeclarations: [crearEventoDeclaration] },
+  { functionDeclarations: [crearEventoDeclaration, crearRecordatorioDeclaration] },
 ]

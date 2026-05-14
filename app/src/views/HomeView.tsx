@@ -18,7 +18,7 @@ type MensajeVisible = {
 
 type ToolStatus =
   | { estado: 'ejecutando'; nombre: string }
-  | { estado: 'exito' }
+  | { estado: 'exito'; nombre: string }
   | { estado: 'error'; mensaje: string }
   | null
 
@@ -117,7 +117,7 @@ function HomeView({ userName, onIrAjustes }: Props) {
     if (estado === 'ejecutando') {
       setToolStatus({ estado: 'ejecutando', nombre })
     } else if (estado === 'exito') {
-      setToolStatus({ estado: 'exito' })
+      setToolStatus({ estado: 'exito', nombre })
       if (toolTimeoutRef.current) clearTimeout(toolTimeoutRef.current)
       toolTimeoutRef.current = setTimeout(() => {
         setToolStatus(null)
@@ -301,7 +301,8 @@ function HomeView({ userName, onIrAjustes }: Props) {
                         <div className={`tool-badge tool-badge--${toolStatus.estado}`}>
                           {toolStatus.estado === 'ejecutando' &&
                             `▸ EJECUTANDO ${toolStatus.nombre.toUpperCase()}...`}
-                          {toolStatus.estado === 'exito' && '✓ EVENTO CREADO'}
+                          {toolStatus.estado === 'exito' &&
+                            `✓ ${toolStatus.nombre === 'crear_recordatorio' ? 'RECORDATORIO CREADO' : 'EVENTO CREADO'}`}
                           {toolStatus.estado === 'error' && `✕ ERROR: ${toolStatus.mensaje}`}
                         </div>
                       )}
