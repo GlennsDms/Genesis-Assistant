@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification'
 import { listen } from '@tauri-apps/api/event'
 import type { Vista } from './types'
@@ -36,10 +36,6 @@ function App() {
     cargarNombre()
   }, [])
 
-  // El conteo de pendientes se refresca cuando el usuario vuelve al dashboard.
-  // Inicializamos con null para distinguir "sin cargar aún" de "cero recordatorios".
-  const [pendingCount, setPendingCount] = useState<number>(0)
-
   // Desbloquea el contexto de audio en el primer gesto del usuario para que
   // la alarma pueda reproducirse automáticamente sin necesitar interacción.
   useAudioUnlock()
@@ -51,22 +47,6 @@ function App() {
   // Evita que la inicialización del scheduler se ejecute más de una vez,
   // incluso en React strict mode (que monta efectos dos veces en desarrollo).
   const schedulerIniciado = useRef(false)
-
-  const refrescarConteo = useCallback(async () => {
-    try {
-      const todos = await listReminders()
-      setPendingCount(todos.filter(r => r.completed === 0).length)
-    } catch {
-      // La BD puede no estar lista en el primer render; el conteo ya está en 0.
-    }
-  }, [])
-
-  // Refresca el conteo cada vez que el usuario navega a la vista "asistente".
-  useEffect(() => {
-    if (vistaActiva === 'asistente') {
-      refrescarConteo()
-    }
-  }, [vistaActiva, refrescarConteo])
 
   // Solicita permiso de notificación y rehidrata el scheduler al arrancar.
   // Se ejecuta una sola vez en cuanto hay un userName válido (post-onboarding).
@@ -153,7 +133,6 @@ function App() {
       console.error('[genesis] error al completar recordatorio desde alarma:', e)
     }
     setColaAlarmas(prev => prev.slice(1))
-    refrescarConteo()
   }
 
   async function handleAlarmaSnooze() {
@@ -186,9 +165,9 @@ function App() {
 
   function renderVista() {
     switch (vistaActiva) {
-      case 'asistente':     return <HomeView userName={userName!} pendingCount={pendingCount} onIrAjustes={() => setVistaActiva('ajustes')} />
+      case 'asistente':     return <HomeView userName={userName!} onIrAjustes={() => setVistaActiva('ajustes')} />
       case 'calendario':    return <CalendarView />
-      case 'recordatorios': return <RemindersView onCambioConteo={refrescarConteo} />
+      case 'recordatorios': return <RemindersView />
       case 'horarios':      return <ScheduleView />
       case 'ajustes':       return <SettingsView />
     }

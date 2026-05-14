@@ -100,6 +100,42 @@ export async function deleteReminder(id: number): Promise<void> {
   remindersChanged.dispatchEvent(new Event('change'))
 }
 
+// ─── Estadísticas del dashboard ──────────────────────────────────────────────
+
+export type DashboardStats = {
+  eventosHoy: number
+  recordatoriosHoy: number
+}
+
+/**
+ * Devuelve el conteo de eventos y recordatorios relevantes para el día actual.
+ * Se llama al montar la vista Asistente; React la desmonta al cambiar de sección,
+ * así que el refresco al volver es automático sin necesitar pub/sub global.
+ */
+export async function getDashboardStats(): Promise<DashboardStats> {
+  const db = await getDb()
+
+  // Comparamos DATE(start_at) con la fecha local para respetar el offset
+  // almacenado en start_at (ISO 8601 con zona horaria). SQLite extrae la parte
+  // de fecha sin convertir, lo que es correcto porque start_at ya refleja la
+  // intención del usuario.
+  const [filaEventos] = await db.select<{ count: number }[]>(
+    "SELECT COUNT(*) AS count FROM events WHERE DATE(start_at) = DATE('now', 'localtime')"
+  )
+
+  // Solo recordatorios no completados con due_at en el día de hoy.
+  // Los recordatorios sin due_at (NULL) no aparecen en el conteo porque
+  // la comparación con DATE() devuelve NULL, que no pasa el filtro de igualdad.
+  const [filaRecordatorios] = await db.select<{ count: number }[]>(
+    "SELECT COUNT(*) AS count FROM reminders WHERE DATE(due_at) = DATE('now', 'localtime') AND completed = 0"
+  )
+
+  return {
+    eventosHoy:       filaEventos?.count       ?? 0,
+    recordatoriosHoy: filaRecordatorios?.count ?? 0,
+  }
+}
+
 // ─── Eventos de calendario ───────────────────────────────────────────────────
 
 /**
