@@ -222,7 +222,7 @@ body::after {
 }
 
 /* =====================================================================
-   Vista Hoy
+   Vista Asistente
    ===================================================================== */
 
 .home-view {
@@ -262,7 +262,7 @@ body::after {
 
 .home-cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
   padding: 24px 48px;
   border-bottom: 1px solid var(--bone-dim);

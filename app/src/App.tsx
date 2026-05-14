@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification'
 import { listen } from '@tauri-apps/api/event'
 import type { Vista } from './types'
@@ -9,7 +9,6 @@ import HomeView from './views/HomeView'
 import CalendarView from './views/CalendarView'
 import RemindersView from './views/RemindersView'
 import ScheduleView from './views/ScheduleView'
-import ChatView from './views/ChatView'
 import SettingsView from './views/SettingsView'
 import AlarmOverlay from './components/AlarmOverlay'
 import { useAudioUnlock } from './hooks/useAudioUnlock'
@@ -20,7 +19,7 @@ import { getSetting, setSetting, SETTING_KEYS } from './lib/settings'
 function App() {
   // null = cargando desde BD; '' = sin nombre (onboarding); string = app lista.
   const [userName, setUserName] = useState<string | null>(null)
-  const [vistaActiva, setVistaActiva] = useState<Vista>('hoy')
+  const [vistaActiva, setVistaActiva] = useState<Vista>('asistente')
 
   // Migración única: mueve genesis_username de localStorage a app_settings y carga el valor.
   useEffect(() => {
@@ -37,10 +36,6 @@ function App() {
     cargarNombre()
   }, [])
 
-  // El conteo de pendientes se refresca cuando el usuario vuelve al dashboard.
-  // Inicializamos con null para distinguir "sin cargar aún" de "cero recordatorios".
-  const [pendingCount, setPendingCount] = useState<number>(0)
-
   // Desbloquea el contexto de audio en el primer gesto del usuario para que
   // la alarma pueda reproducirse automáticamente sin necesitar interacción.
   useAudioUnlock()
@@ -52,22 +47,6 @@ function App() {
   // Evita que la inicialización del scheduler se ejecute más de una vez,
   // incluso en React strict mode (que monta efectos dos veces en desarrollo).
   const schedulerIniciado = useRef(false)
-
-  const refrescarConteo = useCallback(async () => {
-    try {
-      const todos = await listReminders()
-      setPendingCount(todos.filter(r => r.completed === 0).length)
-    } catch {
-      // La BD puede no estar lista en el primer render; el conteo ya está en 0.
-    }
-  }, [])
-
-  // Refresca el conteo cada vez que el usuario navega a la vista "hoy".
-  useEffect(() => {
-    if (vistaActiva === 'hoy') {
-      refrescarConteo()
-    }
-  }, [vistaActiva, refrescarConteo])
 
   // Solicita permiso de notificación y rehidrata el scheduler al arrancar.
   // Se ejecuta una sola vez en cuanto hay un userName válido (post-onboarding).
@@ -154,7 +133,6 @@ function App() {
       console.error('[genesis] error al completar recordatorio desde alarma:', e)
     }
     setColaAlarmas(prev => prev.slice(1))
-    refrescarConteo()
   }
 
   async function handleAlarmaSnooze() {
@@ -187,11 +165,10 @@ function App() {
 
   function renderVista() {
     switch (vistaActiva) {
-      case 'hoy':           return <HomeView userName={userName!} pendingCount={pendingCount} onIrAjustes={() => setVistaActiva('ajustes')} />
+      case 'asistente':     return <HomeView userName={userName!} onIrAjustes={() => setVistaActiva('ajustes')} />
       case 'calendario':    return <CalendarView />
-      case 'recordatorios': return <RemindersView onCambioConteo={refrescarConteo} />
+      case 'recordatorios': return <RemindersView />
       case 'horarios':      return <ScheduleView />
-      case 'chat':          return <ChatView />
       case 'ajustes':       return <SettingsView />
     }
   }

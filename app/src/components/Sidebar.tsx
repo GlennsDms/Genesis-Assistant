@@ -1,11 +1,10 @@
 import type { Vista } from '../types'
 
 const ITEMS: { id: Vista; label: string }[] = [
-  { id: 'hoy',           label: 'HOY' },
+  { id: 'asistente',     label: 'ASISTENTE' },
   { id: 'calendario',    label: 'CALENDARIO' },
   { id: 'recordatorios', label: 'RECORDATORIOS' },
   { id: 'horarios',      label: 'HORARIOS' },
-  { id: 'chat',          label: 'CHAT' },
   { id: 'ajustes',       label: 'AJUSTES' },
 ]
 

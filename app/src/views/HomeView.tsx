@@ -3,10 +3,11 @@ import { streamChat, MissingApiKeyError, InvalidApiKeyError } from '../lib/gemin
 import type { GeminiMensaje } from '../lib/gemini'
 import { GENESIS_TOOLS } from '../lib/tools'
 import MissingApiKeyMessage from '../components/MissingApiKeyMessage'
+import { getDashboardStats } from '../lib/db'
+import type { DashboardStats } from '../lib/db'
 
 interface Props {
   userName: string
-  pendingCount: number
   onIrAjustes: () => void
 }
 
@@ -37,7 +38,7 @@ function obtenerFecha(): string {
   return `${dia} · ${numero} ${mes} · ${hora}`
 }
 
-function HomeView({ userName, pendingCount, onIrAjustes }: Props) {
+function HomeView({ userName, onIrAjustes }: Props) {
   const [mensajes, setMensajes] = useState<MensajeVisible[]>([
     { autor: 'genesis', texto: 'Sistema activo. ¿En qué te ayudo hoy?' },
   ])
@@ -51,6 +52,9 @@ function HomeView({ userName, pendingCount, onIrAjustes }: Props) {
   const [toolStatus, setToolStatus]     = useState<ToolStatus>(null)
   // null = sin comprobar aún; true/false = resultado de la comprobación asíncrona.
   const [sinKey, setSinKey]             = useState<boolean | null>(null)
+
+  // null mientras cargan; objeto con conteos una vez resueltos.
+  const [stats, setStats] = useState<DashboardStats | null>(null)
 
   const textoStreamRef   = useRef('')
   const historialRef     = useRef<HTMLDivElement>(null)
@@ -81,6 +85,28 @@ function HomeView({ userName, pendingCount, onIrAjustes }: Props) {
       activo = false
       cleanupPromise.then(fn => fn?.())
     }
+  }, [])
+
+  // Carga las estadísticas del día al montar la vista.
+  // La bandera `cancelado` evita actualizar el estado si el componente se desmontó
+  // antes de que resolviera la consulta (race condition de React Strict Mode).
+  // Como HomeView se desmonta al cambiar de sección, las stats se refrescan
+  // automáticamente al volver; no se necesita pub/sub global por ahora.
+  useEffect(() => {
+    let cancelado = false
+
+    async function cargarStats() {
+      try {
+        const datos = await getDashboardStats()
+        if (!cancelado) setStats(datos)
+      } catch (e) {
+        console.error('[genesis] error al cargar estadísticas del dashboard:', e)
+      }
+    }
+
+    cargarStats()
+
+    return () => { cancelado = true }
   }, [])
 
   function handleToolCall(
@@ -215,17 +241,16 @@ function HomeView({ userName, pendingCount, onIrAjustes }: Props) {
         </header>
         <section className="home-cards">
           <div className="card">
-            <div className="card-numero">3</div>
+            <div className="card-numero">{stats?.eventosHoy ?? '—'}</div>
             <div className="card-label">Eventos hoy</div>
           </div>
           <div className="card">
-            <div className="card-numero">{pendingCount}</div>
+            <div className="card-numero">{stats?.recordatoriosHoy ?? '—'}</div>
             <div className="card-label">Recordatorios</div>
           </div>
-          <div className="card">
-            <div className="card-numero">2h</div>
-            <div className="card-label">Bloque de foco</div>
-          </div>
+          {/* Tarjeta "Bloque de foco" oculta: la sección Horarios no existe todavía
+              y mostrar un valor inventado o cero sería engañoso. Se reactivará
+              cuando se implemente la vista Horarios. */}
         </section>
       </div>
     )
@@ -243,17 +268,16 @@ function HomeView({ userName, pendingCount, onIrAjustes }: Props) {
 
       <section className="home-cards">
         <div className="card">
-          <div className="card-numero">3</div>
+          <div className="card-numero">{stats?.eventosHoy ?? '—'}</div>
           <div className="card-label">Eventos hoy</div>
         </div>
         <div className="card">
-          <div className="card-numero">{pendingCount}</div>
+          <div className="card-numero">{stats?.recordatoriosHoy ?? '—'}</div>
           <div className="card-label">Recordatorios</div>
         </div>
-        <div className="card">
-          <div className="card-numero">2h</div>
-          <div className="card-label">Bloque de foco</div>
-        </div>
+        {/* Tarjeta "Bloque de foco" oculta: la sección Horarios no existe todavía
+            y mostrar un valor inventado o cero sería engañoso. Se reactivará
+            cuando se implemente la vista Horarios. */}
       </section>
 
       <section className="chat-section">
