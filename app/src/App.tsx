@@ -182,7 +182,10 @@ function App() {
     <div className="app-layout">
       <Sidebar vistaActiva={vistaActiva} onCambiarVista={setVistaActiva} />
       <main className="panel-principal">
-        {renderVista()}
+        <div className="app-topbar">GENESIS · v0.1</div>
+        <div className="vista-wrapper">
+          {renderVista()}
+        </div>
       </main>
 
       {/* El overlay se monta encima de todo el layout sin destruir el estado

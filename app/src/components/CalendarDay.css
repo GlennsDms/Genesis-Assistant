@@ -1,6 +1,6 @@
 .cal-day {
-  background: var(--bone);
-  border: 1px solid rgba(10, 10, 10, 0.1);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
   padding: 5px 5px 3px;
   display: flex;
   flex-direction: column;
@@ -13,7 +13,7 @@
 
 .cal-day:hover {
   transform: scale(1.025);
-  box-shadow: 0 2px 10px rgba(10, 10, 10, 0.12);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
   z-index: 2;
 }
 
@@ -27,7 +27,7 @@
 .cal-day__numero {
   font-family: 'DM Mono', monospace;
   font-size: 11px;
-  color: rgba(10, 10, 10, 0.7);
+  color: var(--text-dim);
   line-height: 1;
   flex-shrink: 0;
   width: 20px;
@@ -40,7 +40,7 @@
 /* Hoy: número dentro de cuadrado rojo sangre */
 .cal-day__numero--hoy {
   background: var(--blood);
-  color: var(--bone);
+  color: var(--text-primary);
   font-family: 'Anton', sans-serif;
   font-style: italic;
   font-size: 12px;
@@ -64,8 +64,10 @@
 .cal-pildora {
   display: block;
   width: 100%;
-  background: var(--noir);
-  color: var(--bone);
+  /* --bg-elevated (#141414) sobre --bg-surface (#1c1c1c) da diferencia visible
+     sin necesitar un token nuevo: la píldora destaca con suficiente contraste. */
+  background: var(--bg-elevated);
+  color: var(--text-primary);
   border: none;
   padding: 2px 5px;
   cursor: pointer;
@@ -100,9 +102,9 @@
   background: var(--blood);
 }
 
-/* Contador "+N MÁS": gold sobre noir, abre la lista del día */
+/* Contador "+N MÁS": gold sobre elevated, abre la lista del día */
 .cal-pildora--mas {
-  background: var(--noir);
+  background: var(--bg-elevated);
   cursor: pointer;
 }
 

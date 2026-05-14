@@ -84,8 +84,7 @@
   font-size: 11px;
   letter-spacing: 0.25em;
   text-transform: uppercase;
-  color: var(--bone-dim);
-  opacity: 0.8;
+  color: var(--text-secondary);
 }
 
 /* ── Título del recordatorio ─────────────────────────────────────────────── */
@@ -112,8 +111,7 @@
 .alarm-overlay__description {
   font-family: 'Oswald', sans-serif;
   font-size: 18px;
-  color: var(--bone);
-  opacity: 0.9;
+  color: var(--text-primary);
   margin: 0;
   max-width: 540px;
   line-height: 1.4;
