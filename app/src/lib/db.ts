@@ -115,19 +115,22 @@ export type DashboardStats = {
 export async function getDashboardStats(): Promise<DashboardStats> {
   const db = await getDb()
 
-  // Comparamos DATE(start_at) con la fecha local para respetar el offset
-  // almacenado en start_at (ISO 8601 con zona horaria). SQLite extrae la parte
-  // de fecha sin convertir, lo que es correcto porque start_at ya refleja la
-  // intención del usuario.
+  // Aplicamos 'localtime' en ambos lados de la comparación para que SQLite
+  // interprete start_at en la zona horaria del sistema en lugar de UTC.
+  // Sin el modificador, SQLite normaliza cualquier string ISO 8601 con offset
+  // a UTC antes de extraer la fecha, lo que produce off-by-one para eventos
+  // cuya hora local cae en un día distinto al UTC (p.ej. 01:30 Madrid = 23:30
+  // UTC del día anterior). Con 'localtime' ambos lados usan la misma zona y
+  // la comparación es siempre coherente con la intención del usuario.
   const [filaEventos] = await db.select<{ count: number }[]>(
-    "SELECT COUNT(*) AS count FROM events WHERE DATE(start_at) = DATE('now', 'localtime')"
+    "SELECT COUNT(*) AS count FROM events WHERE DATE(start_at, 'localtime') = DATE('now', 'localtime')"
   )
 
-  // Solo recordatorios no completados con due_at en el día de hoy.
-  // Los recordatorios sin due_at (NULL) no aparecen en el conteo porque
-  // la comparación con DATE() devuelve NULL, que no pasa el filtro de igualdad.
+  // Mismo razonamiento que el query de eventos: 'localtime' en ambos lados
+  // para evitar el mismo off-by-one en recordatorios con due_at cercano a medianoche.
+  // Los recordatorios sin due_at (NULL) no aparecen porque DATE(NULL) = NULL.
   const [filaRecordatorios] = await db.select<{ count: number }[]>(
-    "SELECT COUNT(*) AS count FROM reminders WHERE DATE(due_at) = DATE('now', 'localtime') AND completed = 0"
+    "SELECT COUNT(*) AS count FROM reminders WHERE DATE(due_at, 'localtime') = DATE('now', 'localtime') AND completed = 0"
   )
 
   return {
