@@ -5,7 +5,6 @@ const ITEMS: { id: Vista; label: string }[] = [
   { id: 'calendario',    label: 'CALENDARIO' },
   { id: 'recordatorios', label: 'RECORDATORIOS' },
   { id: 'horarios',      label: 'HORARIOS' },
-  { id: 'chat',          label: 'CHAT' },
   { id: 'ajustes',       label: 'AJUSTES' },
 ]
 

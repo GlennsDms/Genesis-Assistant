@@ -9,7 +9,6 @@ import HomeView from './views/HomeView'
 import CalendarView from './views/CalendarView'
 import RemindersView from './views/RemindersView'
 import ScheduleView from './views/ScheduleView'
-import ChatView from './views/ChatView'
 import SettingsView from './views/SettingsView'
 import AlarmOverlay from './components/AlarmOverlay'
 import { useAudioUnlock } from './hooks/useAudioUnlock'
@@ -191,7 +190,6 @@ function App() {
       case 'calendario':    return <CalendarView />
       case 'recordatorios': return <RemindersView onCambioConteo={refrescarConteo} />
       case 'horarios':      return <ScheduleView />
-      case 'chat':          return <ChatView />
       case 'ajustes':       return <SettingsView />
     }
   }
