@@ -5,8 +5,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--bone);
-  color: var(--noir);
+  background: var(--bg-base);
+  color: var(--text-primary);
 }
 
 /* ── Cabecera: título + nav ────────────────────────────────────────────────── */
@@ -16,7 +16,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 28px 40px 20px;
-  border-bottom: 1px solid var(--bone-dim);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   gap: 16px;
 }
@@ -26,7 +26,7 @@
   font-style: italic;
   font-size: clamp(28px, 3.5vw, 48px);
   text-transform: uppercase;
-  color: var(--noir);
+  color: var(--text-primary);
   letter-spacing: 2px;
   line-height: 1;
   white-space: nowrap;
@@ -50,8 +50,8 @@
   font-style: italic;
   font-size: 11px;
   letter-spacing: 2px;
-  background: var(--noir);
-  color: var(--bone);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
   border: none;
   padding: 8px 16px;
   cursor: pointer;
@@ -96,7 +96,7 @@
   font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(10, 10, 10, 0.6);
+  color: var(--text-secondary);
   text-align: center;
   padding: 7px 0;
 }
