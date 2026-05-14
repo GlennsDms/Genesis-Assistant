@@ -2,17 +2,81 @@
    GENESIS — Design system
    ===================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap');
+/* ── Tipografías locales — offline-first, sin dependencia de CDN ─────── */
+
+/* Anton: solo peso regular; el italic lo sintetiza el navegador (intencional) */
+@font-face {
+  font-family: 'Anton';
+  src: url('./assets/fonts/Anton-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Oswald: archivo variable que cubre pesos 200-700 con un único fichero */
+@font-face {
+  font-family: 'Oswald';
+  src: url('./assets/fonts/Oswald-Variable.woff2') format('woff2');
+  font-weight: 200 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* DM Mono: tres variantes — regular, medium e italic */
+@font-face {
+  font-family: 'DM Mono';
+  src: url('./assets/fonts/DMMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'DM Mono';
+  src: url('./assets/fonts/DMMono-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'DM Mono';
+  src: url('./assets/fonts/DMMono-Italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
 
 :root {
-  --noir:       #0a0a0a;
-  --ink:        #141414;
-  --blood:      #e60012;
-  --blood-dark: #a30009;
-  --bone:       #faf6ee;
-  --bone-dim:   #e8e0d0;
-  --gold:       #ffc700;
-  --sidebar-bg: #181818;
+  /* ── Paleta de marca ── */
+  --noir:       #0a0a0a;    /* negro puro — oscuro base */
+  --ink:        #141414;    /* gris muy oscuro — segundo nivel */
+  --blood:      #e60012;    /* rojo sangre — acción primaria */
+  --blood-dark: #a30009;    /* rojo oscuro — hover / pressed */
+  --bone:       #faf6ee;    /* crema claro — texto principal sobre dark */
+  --bone-dim:   #e8e0d0;    /* crema atenuado — texto secundario */
+  --gold:       #ffc700;    /* dorado — acentos puntuales */
+  --sidebar-bg: #181818;    /* fondo específico de la sidebar */
+
+  /* ── Fondos semánticos (tres niveles de profundidad) ── */
+  --bg-base:     var(--noir);   /* canvas principal de cada vista */
+  --bg-elevated: var(--ink);    /* paneles internos, formularios inline */
+  --bg-surface:  #1c1c1c;       /* tarjetas, inputs, elementos sobre elevated */
+
+  /* ── Textos semánticos ── */
+  --text-primary:   var(--bone);      /* texto principal */
+  --text-secondary: var(--bone-dim);  /* subtítulos y texto de apoyo */
+  --text-dim:       #888888;          /* metadata, fechas, labels menores */
+  --text-muted:     #666666;          /* separadores, ghost — solo para decorativos */
+
+  /* ── Bordes ── */
+  --border:        #2a2a2a;   /* separadores normales */
+  --border-subtle: #1d1d1d;   /* divisores casi invisibles */
+
+  /* ── Estados ── */
+  --state-disabled: #3a3a3a;   /* controles y texto deshabilitados */
+  --state-success:  #2d8a4e;   /* feedback positivo (guardar key, importar…) */
+  /* errores usan var(--blood) directamente */
 }
 
 *, *::before, *::after {
@@ -29,8 +93,18 @@ html, body, #root {
 
 body {
   font-family: 'Oswald', sans-serif;
-  background: var(--noir);
-  color: var(--bone);
+  background: var(--bg-base);
+  color: var(--text-primary);
+}
+
+/* Base tipográfica — las vistas pueden sobrescribir tamaño y weight */
+h1, h2, h3 {
+  font-family: 'Anton', sans-serif;
+  font-style: italic;
+}
+
+code, pre {
+  font-family: 'DM Mono', monospace;
 }
 
 /* Textura de grano: SVG con filtro feTurbulence renderizado como imagen de fondo.
@@ -58,9 +132,57 @@ body::after {
 
 .panel-principal {
   flex: 1;
-  overflow-y: auto;
-  background: var(--bone);
-  color: var(--noir);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-base);
+  color: var(--text-primary);
+}
+
+/* Franja de versión anclada en la parte superior del área de contenido.
+   Prepara el terreno para convertirse en titlebar custom en style/custom-titlebar. */
+.app-topbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 5px 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-subtle);
+  user-select: none;
+}
+
+/* Envuelve la vista activa y distribuye el espacio restante bajo la topbar.
+   min-height: 0 es necesario en flex para evitar que el hijo desborde el padre. */
+.vista-wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Scrollbars — Webview2/Chromium los soporta con ::-webkit-scrollbar ── */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-elevated);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+
+/* El acento rojo es sutil: solo aparece al pasar el ratón */
+::-webkit-scrollbar-thumb:hover {
+  background: var(--blood-dark);
 }
 
 /* =====================================================================
