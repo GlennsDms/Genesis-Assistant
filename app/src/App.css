@@ -644,7 +644,7 @@ body::after {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--bone);
+  background: var(--bg-base);
 }
 
 .reminders-header {
@@ -652,7 +652,7 @@ body::after {
   align-items: center;
   justify-content: space-between;
   padding: 40px 48px 24px 48px;
-  border-bottom: 1px solid var(--bone-dim);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
@@ -661,7 +661,7 @@ body::after {
   font-size: 46px;
   font-style: italic;
   text-transform: uppercase;
-  color: var(--noir);
+  color: var(--text-primary);
   letter-spacing: 2px;
 }
 
@@ -670,7 +670,7 @@ body::after {
   font-size: 13px;
   letter-spacing: 3px;
   background: var(--blood);
-  color: var(--bone);
+  color: var(--text-primary);
   border: none;
   padding: 10px 22px;
   cursor: pointer;
@@ -688,7 +688,7 @@ body::after {
 .reminder-form {
   padding: 20px 48px;
   border-bottom: 2px solid var(--blood);
-  background: white;
+  background: var(--bg-elevated);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -702,18 +702,18 @@ body::after {
 .reminder-form-input {
   width: 100%;
   border: none;
-  border-bottom: 1px solid var(--bone-dim);
+  border-bottom: 1px solid var(--border-subtle);
   background: transparent;
   font-family: 'Oswald', sans-serif;
   font-size: 15px;
-  color: var(--noir);
+  color: var(--text-primary);
   padding: 8px 0;
   outline: none;
   letter-spacing: 1px;
 }
 
 .reminder-form-input::placeholder {
-  color: #bbb;
+  color: var(--text-dim);
   font-size: 13px;
   letter-spacing: 2px;
 }
@@ -725,7 +725,7 @@ body::after {
 .reminder-form-input--date {
   font-family: 'DM Mono', monospace;
   font-size: 12px;
-  color: #666;
+  color: var(--text-dim);
   width: auto;
 }
 
@@ -754,7 +754,7 @@ body::after {
 
 .reminder-btn--primary {
   background: var(--blood);
-  color: var(--bone);
+  color: var(--text-primary);
 }
 
 .reminder-btn--primary:hover:not(:disabled) {
@@ -763,13 +763,13 @@ body::after {
 
 .reminder-btn--ghost {
   background: transparent;
-  color: #999;
-  border: 1px solid var(--bone-dim);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
 }
 
 .reminder-btn--ghost:hover:not(:disabled) {
-  color: var(--noir);
-  border-color: #bbb;
+  color: var(--text-primary);
+  border-color: var(--text-dim);
 }
 
 .reminder-btn:disabled {
@@ -796,9 +796,9 @@ body::after {
   font-size: 9px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: #bbb;
+  color: var(--text-muted);
   padding: 20px 0 8px 0;
-  border-bottom: 1px solid var(--bone-dim);
+  border-bottom: 1px solid var(--border);
   margin-bottom: 4px;
 }
 
@@ -809,7 +809,7 @@ body::after {
   align-items: flex-start;
   gap: 14px;
   padding: 14px 0;
-  border-bottom: 1px solid var(--bone-dim);
+  border-bottom: 1px solid var(--border);
   transition: opacity 0.25s;
 }
 
@@ -825,7 +825,7 @@ body::after {
   width: 20px;
   height: 20px;
   min-width: 20px;
-  border: 2px solid var(--noir);
+  border: 2px solid var(--text-secondary);
   background: transparent;
   cursor: pointer;
   display: flex;
@@ -838,8 +838,8 @@ body::after {
 }
 
 .reminder-item--completado .reminder-checkbox {
-  border-color: #ccc;
-  background: #f0f0f0;
+  border-color: var(--border);
+  background: var(--bg-surface);
 }
 
 .reminder-checkbox:hover:not(:disabled) {
@@ -857,7 +857,7 @@ body::after {
   font-family: 'Oswald', sans-serif;
   font-size: 15px;
   font-weight: 500;
-  color: var(--noir);
+  color: var(--text-primary);
   letter-spacing: 0.5px;
   /* Tachado visual para completados sin modificar el DOM */
   text-decoration: inherit;
@@ -865,20 +865,20 @@ body::after {
 
 .reminder-item--completado .reminder-title {
   text-decoration: line-through;
-  color: #aaa;
+  color: var(--text-dim);
 }
 
 .reminder-description {
   font-family: 'DM Mono', monospace;
   font-size: 11px;
-  color: #888;
+  color: var(--text-dim);
 }
 
 .reminder-due {
   font-family: 'DM Mono', monospace;
   font-size: 10px;
   letter-spacing: 1px;
-  color: #aaa;
+  color: var(--text-dim);
   text-transform: lowercase;
 }
 
@@ -899,7 +899,7 @@ body::after {
 .reminder-borrar {
   background: transparent;
   border: none;
-  color: #ccc;
+  color: var(--text-muted);
   font-size: 20px;
   line-height: 1;
   cursor: pointer;
@@ -920,7 +920,7 @@ body::after {
 .reminder-confirm-pregunta {
   font-family: 'DM Mono', monospace;
   font-size: 10px;
-  color: #888;
+  color: var(--text-dim);
   letter-spacing: 1px;
 }
 
@@ -937,7 +937,7 @@ body::after {
 
 .reminder-confirm-si {
   background: var(--blood);
-  color: var(--bone);
+  color: var(--text-primary);
 }
 
 .reminder-confirm-si:hover:not(:disabled) {
@@ -945,12 +945,12 @@ body::after {
 }
 
 .reminder-confirm-no {
-  background: var(--bone-dim);
-  color: var(--noir);
+  background: var(--bg-surface);
+  color: var(--text-primary);
 }
 
 .reminder-confirm-no:hover:not(:disabled) {
-  background: #d0c8b8;
+  background: var(--bg-elevated);
 }
 
 /* ── Estados especiales ────────────────────────────────── */
@@ -978,7 +978,7 @@ body::after {
 .reminders-empty-halftone {
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle, var(--bone-dim) 1.5px, transparent 1.5px);
+  background-image: radial-gradient(circle, var(--text-muted) 1.5px, transparent 1.5px);
   background-size: 18px 18px;
   opacity: 0.6;
   pointer-events: none;
@@ -989,7 +989,7 @@ body::after {
   font-size: 32px;
   font-style: italic;
   text-transform: uppercase;
-  color: var(--noir);
+  color: var(--text-primary);
   text-align: center;
   line-height: 1.2;
   letter-spacing: 2px;
@@ -1018,7 +1018,7 @@ body::after {
   font-family: 'DM Mono', monospace;
   font-size: 12px;
   letter-spacing: 1.5px;
-  color: #888;
+  color: var(--text-dim);
   text-align: center;
   max-width: 360px;
   line-height: 1.7;
