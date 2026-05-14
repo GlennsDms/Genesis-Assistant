@@ -12,7 +12,7 @@ import ScheduleView from './views/ScheduleView'
 import SettingsView from './views/SettingsView'
 import AlarmOverlay from './components/AlarmOverlay'
 import { useAudioUnlock } from './hooks/useAudioUnlock'
-import { materializeEventsForToday, markReminderCompleted, updateReminder } from './lib/db'
+import { openDb, materializeEventsForToday, markReminderCompleted, updateReminder } from './lib/db'
 import { scheduleReminder, cancelReminder, rehydrateAlarms } from './lib/scheduler'
 import { getSetting, setSetting, SETTING_KEYS } from './lib/settings'
 
@@ -48,14 +48,21 @@ function App() {
   // los recordatorios y eventos existen independientemente de si el usuario
   // ha completado el onboarding. El flag cancelled evita actuar si el
   // componente se desmonta antes de que resuelvan las Promises (React Strict Mode).
-  // Secuencia deliberada: primero rehydrate_alarms (programar los recordatorios
-  // existentes) y luego materializeEventsForToday (crear los derivados de hoy
-  // y programarlos), para no rehidratar dos veces los mismos recordatorios.
+  // Secuencia obligatoria:
+  //   1. openDb()               — tauri-plugin-sql abre la conexión de forma lazy:
+  //                               DbInstances (estado Rust) no registra la BD hasta
+  //                               que el frontend llama a Database.load(). Sin este
+  //                               paso, rehydrate_alarms devuelve error porque la
+  //                               entrada "sqlite:genesis.db" aún no existe en el mapa.
+  //   2. rehydrateAlarms()      — Rust ya puede leer y programar los tasks existentes.
+  //   3. materializeEventsForToday() — crea los derivados de hoy y los programa.
   useEffect(() => {
     let cancelled = false
 
     async function arrancar() {
       try {
+        await openDb()
+        if (cancelled) return
         await rehydrateAlarms()
         if (cancelled) return
         await materializeEventsForToday()

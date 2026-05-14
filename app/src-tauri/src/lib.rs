@@ -134,13 +134,16 @@ async fn rehydrate_alarms(
         }
     };
 
-    // Filtro SQL de primera aproximación: excluye vencidos y completados.
-    // do_schedule_reminder hace la comprobación precisa con parse_from_rfc3339,
-    // así que si algún due_at con offset quedara mal comparado aquí, el Rust
-    // lo descartará correctamente como vencido.
+    // Comparación por fecha local, no string: due_at es ISO 8601 con offset
+    // (ej. "2026-05-14T11:30:00+02:00") y datetime('now') es UTC sin offset,
+    // por lo que la comparación lexicográfica string-vs-string produce falsos
+    // negativos según el offset. DATE(..., 'localtime') normaliza ambos lados
+    // a la fecha del día local, trayendo todos los recordatorios desde hoy en
+    // adelante. do_schedule_reminder rechaza con precisión los vencidos vía
+    // parse_from_rfc3339 + diff ≤ 0, igual que hace el dashboard con sus conteos.
     let filas = sqlx::query(
         "SELECT id, title, description, due_at FROM reminders \
-         WHERE due_at > datetime('now') AND completed = 0",
+         WHERE DATE(due_at, 'localtime') >= DATE('now', 'localtime') AND completed = 0",
     )
     .fetch_all(&pool)
     .await

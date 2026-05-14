@@ -18,6 +18,15 @@ async function getDb(): Promise<Database> {
   return _db
 }
 
+// tauri-plugin-sql abre la conexión de forma lazy: DbInstances (estado Rust del
+// plugin) no registra la BD hasta que el frontend llama a Database.load() por
+// primera vez. rehydrate_alarms necesita que esa entrada exista para poder
+// leer recordatorios. Llamar a openDb() antes de invocar rehydrate_alarms
+// garantiza que la conexión está lista y el PRAGMA foreign_keys activado.
+export async function openDb(): Promise<void> {
+  await getDb()
+}
+
 // Canal de invalidación para que acciones externas a RemindersView (alarma,
 // futuras integraciones) notifiquen cambios en la BD sin acoplar directamente
 // los módulos. Cualquier consumidor suscribe 'change' y refresca su estado.
@@ -183,6 +192,16 @@ async function materializarEvento(db: Database, evento: CalendarEvent): Promise<
   if (existentes.length > 0) return
 
   const due_at = calcularDueAt(evento)
+  // Skip silencioso: si el due_at ya pasó no tiene sentido crear el recordatorio.
+  // Aplica tanto a all-day (09:00 fija que ya pasó) como a eventos con hora cuya
+  // hora ha transcurrido en el momento de materializar. do_schedule_reminder lo
+  // rechazaría de todas formas, pero insertarlo en BD generaría un registro
+  // pendiente inutilizable que confundiría la vista de recordatorios.
+  if (new Date(due_at) <= new Date()) {
+    console.log(`[genesis] materializarEvento: skip evento ${evento.id} — due_at ya pasó (${due_at})`)
+    return
+  }
+
   const result = await db.execute(
     'INSERT INTO reminders (title, description, due_at, source_event_id) VALUES (?, ?, ?, ?)',
     [evento.title, evento.description, due_at, evento.id]
