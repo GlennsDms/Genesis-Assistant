@@ -358,7 +358,7 @@ body::after {
 
 .home-header {
   padding: 40px 48px 28px 48px;
-  border-bottom: 1px solid var(--bone-dim);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
@@ -368,7 +368,7 @@ body::after {
   line-height: 1.05;
   font-style: italic;
   text-transform: uppercase;
-  color: var(--noir);
+  color: var(--text-primary);
   margin-bottom: 10px;
 }
 
@@ -381,7 +381,7 @@ body::after {
   font-size: 10px;
   letter-spacing: 2.5px;
   text-transform: uppercase;
-  color: #aaa;
+  color: var(--text-dim);
 }
 
 .home-cards {
@@ -389,22 +389,22 @@ body::after {
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
   padding: 24px 48px;
-  border-bottom: 1px solid var(--bone-dim);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .card {
-  background: white;
+  background: var(--bg-surface);
   border-left: 4px solid var(--blood);
   padding: 18px 22px;
-  box-shadow: 2px 2px 0 var(--bone-dim);
+  box-shadow: 2px 2px 0 var(--blood-dark);
 }
 
 .card-numero {
   font-family: 'Anton', sans-serif;
   font-size: 42px;
   font-style: italic;
-  color: var(--noir);
+  color: var(--text-primary);
   line-height: 1;
   margin-bottom: 6px;
 }
@@ -414,7 +414,7 @@ body::after {
   font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: #999;
+  color: var(--text-dim);
 }
 
 /* =====================================================================
@@ -442,7 +442,7 @@ body::after {
   font-family: 'DM Mono', monospace;
   font-size: 13px;
   line-height: 1.6;
-  color: var(--noir);
+  color: var(--text-primary);
 }
 
 .prefijo-usr {
@@ -460,9 +460,9 @@ body::after {
 .chat-input-area {
   display: flex;
   align-items: center;
-  border-top: 1px solid var(--bone-dim);
+  border-top: 1px solid var(--border);
   padding: 0 48px;
-  background: white;
+  background: var(--bg-elevated);
   flex-shrink: 0;
 }
 
@@ -480,13 +480,13 @@ body::after {
   outline: none;
   font-family: 'DM Mono', monospace;
   font-size: 13px;
-  color: var(--noir);
+  color: var(--text-primary);
   background: transparent;
   padding: 16px 0;
 }
 
 .chat-input::placeholder {
-  color: #ccc;
+  color: var(--text-dim);
 }
 
 .chat-input:disabled {
@@ -556,7 +556,7 @@ body::after {
   align-items: center;
   gap: 12px;
   padding: 24px 20px;
-  background: var(--bone);
+  background: var(--bg-elevated);
   border: 2px dashed var(--blood);
   text-align: center;
 }
@@ -570,15 +570,14 @@ body::after {
   font-size: 15px;
   font-style: italic;
   letter-spacing: 2px;
-  color: var(--noir);
+  color: var(--text-primary);
 }
 
 .missing-key-texto {
   font-family: 'DM Mono', monospace;
   font-size: 11px;
   line-height: 1.6;
-  color: var(--noir);
-  opacity: 0.75;
+  color: var(--text-secondary);
 }
 
 .missing-key-btn {
@@ -588,7 +587,7 @@ body::after {
   letter-spacing: 2px;
   padding: 6px 18px;
   background: var(--blood);
-  color: var(--bone);
+  color: var(--text-primary);
   border: none;
   cursor: pointer;
   transition: background 0.15s;
