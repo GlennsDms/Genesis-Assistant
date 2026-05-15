@@ -5,8 +5,8 @@ import type { NewCalendarEvent } from './types'
 // Sin este límite, un FREQ=DAILY sin UNTIL/COUNT generaría decenas de miles
 // de filas en la BD. 30 días al pasado captura eventos en curso; 365 al futuro
 // es suficiente para planificación anual sin explotar el almacenamiento.
-export const RECURRENCE_EXPANSION_PAST_DAYS = 30
-export const RECURRENCE_EXPANSION_FUTURE_DAYS = 365
+const RECURRENCE_EXPANSION_PAST_DAYS = 30
+const RECURRENCE_EXPANSION_FUTURE_DAYS = 365
 
 // ical.js tiene sus propios tipos internos. Usamos los que provee el paquete.
 type ICALTime = InstanceType<typeof ICAL.Time>

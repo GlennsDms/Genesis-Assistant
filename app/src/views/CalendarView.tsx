@@ -162,7 +162,6 @@ function CalendarView() {
   function handleCeldaClick(_fecha: Date) {
     setPanel(null)
     // TODO 6c: abrir formulario de creación de evento para _fecha
-    console.log('crear evento en día', _fecha.toISOString())
   }
 
   // ── Render ──────────────────────────────────────────────────────────────────
