@@ -677,6 +677,8 @@
   .app-main {
     padding: 32px;
   }
+  .app-view { display: none; }
+  .app-view.active-view { display: block; }
   .app-greeting {
     font-family: 'Anton', sans-serif;
     font-style: italic;
@@ -1244,38 +1246,52 @@
     <div class="app-body">
       <aside class="app-sidebar">
         <div class="app-side-logo">GNS</div>
-        <div class="app-side-item active">▸ Asistente</div>
-        <div class="app-side-item">Calendario</div>
-        <div class="app-side-item">Recordatorios</div>
+        <div class="app-side-item active" data-target="asistente" role="button" tabindex="0">Asistente</div>
+        <div class="app-side-item" data-target="calendario" role="button" tabindex="0">Calendario</div>
+        <div class="app-side-item" data-target="recordatorios" role="button" tabindex="0">Recordatorios</div>
         <div class="app-side-item">Horarios</div>
-        <div class="app-side-item">Ajustes</div>
+        <div class="app-side-item" data-target="ajustes" role="button" tabindex="0">Ajustes</div>
       </aside>
       <main class="app-main">
-        <h3 class="app-greeting">Buenas tardes, <span>Alex</span>.</h3>
-        <p class="app-subgreeting">Miércoles · 29 abril · 14:32</p>
+        <div class="app-view active-view" data-view="asistente">
+          <h3 class="app-greeting">Buenas tardes, <span>Alex</span>.</h3>
+          <p class="app-subgreeting">Miércoles · 29 abril · 14:32</p>
 
-        <div class="app-cards">
-          <div class="app-card">
-            <div class="app-card-num">3</div>
-            <div class="app-card-label">Eventos hoy</div>
+          <div class="app-cards">
+            <div class="app-card">
+              <div class="app-card-num">3</div>
+              <div class="app-card-label">Eventos hoy</div>
+            </div>
+            <div class="app-card">
+              <div class="app-card-num">7</div>
+              <div class="app-card-label">Recordatorios</div>
+            </div>
+            <div class="app-card">
+              <div class="app-card-num">2h</div>
+              <div class="app-card-label">Bloque de foco</div>
+            </div>
           </div>
-          <div class="app-card">
-            <div class="app-card-num">7</div>
-            <div class="app-card-label">Recordatorios</div>
-          </div>
-          <div class="app-card">
-            <div class="app-card-num">2h</div>
-            <div class="app-card-label">Bloque de foco</div>
+
+          <div class="app-chat">
+            <div class="chat-msg user" data-from="USR ▸">Recuérdame revisar el PR a las 18:00.</div>
+            <div class="chat-msg" data-from="GEN ▸">Hecho. Te avisaré a las 18:00 sobre revisar el PR. ¿Algo más?</div>
+            <div class="chat-input">
+              <span style="color: var(--blood); font-family: 'DM Mono', monospace;">▸</span>
+              <input class="chat-input-field" placeholder="Escribe un mensaje...">
+            </div>
           </div>
         </div>
 
-        <div class="app-chat">
-          <div class="chat-msg user" data-from="USR ▸">Recuérdame revisar el PR a las 18:00.</div>
-          <div class="chat-msg" data-from="GEN ▸">Hecho. Te avisaré a las 18:00 sobre revisar el PR. ¿Algo más?</div>
-          <div class="chat-input">
-            <span style="color: var(--blood); font-family: 'DM Mono', monospace;">▸</span>
-            <input class="chat-input-field" placeholder="Escribe un mensaje...">
-          </div>
+        <div class="app-view" data-view="calendario">
+          <!-- vista: calendario -->
+        </div>
+
+        <div class="app-view" data-view="recordatorios">
+          <!-- vista: recordatorios -->
+        </div>
+
+        <div class="app-view" data-view="ajustes">
+          <!-- vista: ajustes -->
         </div>
       </main>
     </div>
@@ -1374,6 +1390,31 @@
 </footer>
 
 <script>
+  // sistema de vistas del mockup: cambia el contenido al clicar la sidebar
+  (function () {
+    var items = document.querySelectorAll('.app-side-item[data-target]');
+    var views = document.querySelectorAll('.app-view');
+
+    function activarVista() {
+      var target = this.dataset.target;
+      items.forEach(function (i) { i.classList.remove('active'); });
+      this.classList.add('active');
+      views.forEach(function (v) { v.classList.remove('active-view'); });
+      var vistaTarget = document.querySelector('.app-view[data-view="' + target + '"]');
+      if (vistaTarget) vistaTarget.classList.add('active-view');
+    }
+
+    items.forEach(function (item) {
+      item.addEventListener('click', activarVista);
+      item.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          activarVista.call(item);
+        }
+      });
+    });
+  }());
+
   // smooth click animation on mission cards (toggle visited stamp)
   document.querySelectorAll('.mission-card').forEach((card, i) => {
     card.addEventListener('click', () => {
