@@ -1,6 +1,6 @@
-[package]
+﻿[package]
 name = "app"
-version = "0.1.0"
+version = "0.2.0"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
@@ -27,12 +27,12 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 # Parsing robusto de ISO 8601 con offsets de timezone para calcular el delay del scheduler.
 chrono = "0.4"
-# tokio es dep transitiva de Tauri pero no expone la feature `time`; la activamos aquí de forma aditiva.
+# tokio es dep transitiva de Tauri pero no expone la feature `time`; la activamos aquÃ­ de forma aditiva.
 tokio = { version = "1", features = ["time"] }
-# Diálogo nativo de selección de archivos (importación .ics).
+# DiÃ¡logo nativo de selecciÃ³n de archivos (importaciÃ³n .ics).
 tauri-plugin-dialog = "2"
 # Ya era dep transitiva de tauri-plugin-sql (Cargo.lock: 0.8.6). La declaramos
-# explícita con versión fijada para acceder a Pool<Sqlite> en rehydrate_alarms
+# explÃ­cita con versiÃ³n fijada para acceder a Pool<Sqlite> en rehydrate_alarms
 # sin depender de que el plugin la reexporte. Sin esto la rama DbPool::Sqlite(p)
 # no es tipeable desde nuestro crate.
 sqlx = { version = "=0.8.6", features = ["sqlite"] }
