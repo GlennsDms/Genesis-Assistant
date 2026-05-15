@@ -679,6 +679,104 @@
   }
   .app-view { display: none; }
   .app-view.active-view { display: block; }
+
+  /* ============ VISTA: CALENDARIO ============ */
+  .view-cal {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .view-cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .view-cal-titulo {
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: 28px;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--bone);
+  }
+  .view-cal-titulo span { color: var(--bone-dim); font-size: 20px; margin-left: 6px; }
+  .view-cal-nav { display: flex; gap: 6px; }
+  .view-cal-btn {
+    background: #222;
+    border: 1px solid #3a3a3a;
+    color: var(--bone-dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 4px 10px;
+    cursor: default;
+    line-height: 1;
+  }
+  .view-cal-semana {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 4px;
+  }
+  .view-cal-dia-semana {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--blood);
+    text-align: center;
+    padding: 4px 0;
+  }
+  .view-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    gap: 2px;
+    flex: 1;
+  }
+  .view-cal-celda {
+    background: #181818;
+    border: 1px solid #2a2a2a;
+    padding: 4px 5px;
+    min-height: 58px;
+    position: relative;
+  }
+  .view-cal-celda.fuera-mes {
+    background: #141414;
+    opacity: .45;
+  }
+  .view-cal-celda.es-hoy {
+    border-color: var(--blood);
+  }
+  .view-cal-celda.es-hoy .view-cal-dia-num {
+    background: var(--blood);
+    color: var(--bone);
+    border-radius: 2px;
+    padding: 0 3px;
+  }
+  .view-cal-dia-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--bone-dim);
+    display: inline-block;
+    line-height: 1.6;
+    margin-bottom: 3px;
+  }
+  .view-cal-pill {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    letter-spacing: .5px;
+    padding: 2px 4px;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-radius: 1px;
+  }
+  .view-cal-pill--red { background: var(--blood); color: var(--bone); }
+  .view-cal-pill--gold { background: var(--gold); color: var(--noir); }
   .app-greeting {
     font-family: 'Anton', sans-serif;
     font-style: italic;
@@ -1283,7 +1381,78 @@
         </div>
 
         <div class="app-view" data-view="calendario">
-          <!-- vista: calendario -->
+          <div class="view-cal">
+            <div class="view-cal-header">
+              <h3 class="view-cal-titulo">MAYO <span>2026</span></h3>
+              <div class="view-cal-nav">
+                <button class="view-cal-btn">◂</button>
+                <button class="view-cal-btn">▸</button>
+              </div>
+            </div>
+            <div class="view-cal-semana">
+              <div class="view-cal-dia-semana">LUN</div>
+              <div class="view-cal-dia-semana">MAR</div>
+              <div class="view-cal-dia-semana">MIÉ</div>
+              <div class="view-cal-dia-semana">JUE</div>
+              <div class="view-cal-dia-semana">VIE</div>
+              <div class="view-cal-dia-semana">SÁB</div>
+              <div class="view-cal-dia-semana">DOM</div>
+            </div>
+            <div class="view-cal-grid">
+              <!-- Semana 1: 27 abr – 3 may -->
+              <div class="view-cal-celda fuera-mes"><span class="view-cal-dia-num">27</span></div>
+              <div class="view-cal-celda fuera-mes"><span class="view-cal-dia-num">28</span></div>
+              <div class="view-cal-celda fuera-mes"><span class="view-cal-dia-num">29</span></div>
+              <div class="view-cal-celda fuera-mes"><span class="view-cal-dia-num">30</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">1</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">2</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">3</span></div>
+              <!-- Semana 2: 4 – 10 may -->
+              <div class="view-cal-celda">
+                <span class="view-cal-dia-num">4</span>
+                <span class="view-cal-pill view-cal-pill--red">Sprint planning</span>
+              </div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">5</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">6</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">7</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">8</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">9</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">10</span></div>
+              <!-- Semana 3: 11 – 17 may -->
+              <div class="view-cal-celda"><span class="view-cal-dia-num">11</span></div>
+              <div class="view-cal-celda">
+                <span class="view-cal-dia-num">12</span>
+                <span class="view-cal-pill view-cal-pill--gold">1:1 con Marta</span>
+              </div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">13</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">14</span></div>
+              <div class="view-cal-celda es-hoy"><span class="view-cal-dia-num">15</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">16</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">17</span></div>
+              <!-- Semana 4: 18 – 24 may -->
+              <div class="view-cal-celda"><span class="view-cal-dia-num">18</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">19</span></div>
+              <div class="view-cal-celda">
+                <span class="view-cal-dia-num">20</span>
+                <span class="view-cal-pill view-cal-pill--red">Demo a cliente</span>
+              </div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">21</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">22</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">23</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">24</span></div>
+              <!-- Semana 5: 25 – 31 may -->
+              <div class="view-cal-celda"><span class="view-cal-dia-num">25</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">26</span></div>
+              <div class="view-cal-celda">
+                <span class="view-cal-dia-num">27</span>
+                <span class="view-cal-pill view-cal-pill--gold">Revisión Q2</span>
+              </div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">28</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">29</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">30</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">31</span></div>
+            </div>
+          </div>
         </div>
 
         <div class="app-view" data-view="recordatorios">
