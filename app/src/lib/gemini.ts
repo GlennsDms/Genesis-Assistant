@@ -341,7 +341,6 @@ async function flujoConTools(
     if (!fcPart) {
       const texto = textoParts.map(p => p.text).join('')
       if (texto) {
-        console.log('[genesis-tools] respuesta final del modelo:', texto)
         onChunk(texto)
       }
       return
@@ -383,10 +382,8 @@ async function flujoConTools(
     // editar_evento y borrar_evento sí son acciones visibles para el usuario.
     const esVisible = toolName !== 'listar_eventos'
     if (esVisible) onToolCall?.(toolName, 'ejecutando')
-    console.log(`[genesis-tools] tool detectado: ${toolName} (iteración ${iteracion}), args:`, toolArgs)
 
     const resultado = await executeTool(toolName, toolArgs)
-    console.log('[genesis-tools] resultado:', resultado)
 
     if (resultado.ok === 'silent_skip') {
       // Defensivo: no debería llegar aquí tras el pre-check de esta iteración.
