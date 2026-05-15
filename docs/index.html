@@ -777,6 +777,116 @@
   }
   .view-cal-pill--red { background: var(--blood); color: var(--bone); }
   .view-cal-pill--gold { background: var(--gold); color: var(--noir); }
+
+  /* ============ VISTA: RECORDATORIOS ============ */
+  .view-rem {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .view-rem-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .view-rem-titulo {
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: 28px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--bone);
+  }
+  .view-rem-btn-nuevo {
+    background: var(--blood);
+    border: none;
+    color: var(--bone);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 6px 14px;
+    cursor: default;
+    text-transform: uppercase;
+  }
+  .view-rem-lista {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+  }
+  .view-rem-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #181818;
+    border: 1px solid #2a2a2a;
+    border-left: 3px solid var(--blood);
+  }
+  .view-rem-lista--completados .view-rem-item {
+    border-left-color: #3a3a3a;
+    opacity: .55;
+  }
+  .view-rem-check {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--bone-dim);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .view-rem-check--done {
+    border-color: var(--blood);
+    background: var(--blood);
+    position: relative;
+  }
+  .view-rem-check--done::after {
+    content: '✓';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: var(--bone);
+    line-height: 1;
+  }
+  .view-rem-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .view-rem-nombre {
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--bone);
+    text-transform: uppercase;
+  }
+  .view-rem-lista--completados .view-rem-nombre {
+    text-decoration: line-through;
+    color: var(--bone-dim);
+  }
+  .view-rem-hora {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--bone-dim);
+  }
+  .view-rem-separador {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #555;
+    padding: 12px 0 8px;
+    border-top: 1px dashed #2a2a2a;
+    margin-top: 8px;
+  }
   .app-greeting {
     font-family: 'Anton', sans-serif;
     font-style: italic;
@@ -1456,7 +1566,52 @@
         </div>
 
         <div class="app-view" data-view="recordatorios">
-          <!-- vista: recordatorios -->
+          <div class="view-rem">
+            <div class="view-rem-header">
+              <h3 class="view-rem-titulo">Recordatorios</h3>
+              <button class="view-rem-btn-nuevo">+ Nuevo</button>
+            </div>
+            <ul class="view-rem-lista">
+              <li class="view-rem-item">
+                <div class="view-rem-check"></div>
+                <div class="view-rem-body">
+                  <span class="view-rem-nombre">Revisar PR del equipo</span>
+                  <span class="view-rem-hora">hoy · 18:00</span>
+                </div>
+              </li>
+              <li class="view-rem-item">
+                <div class="view-rem-check"></div>
+                <div class="view-rem-body">
+                  <span class="view-rem-nombre">Enviar informe trimestral</span>
+                  <span class="view-rem-hora">mañana · 10:00</span>
+                </div>
+              </li>
+              <li class="view-rem-item">
+                <div class="view-rem-check"></div>
+                <div class="view-rem-body">
+                  <span class="view-rem-nombre">Llamar al cliente</span>
+                  <span class="view-rem-hora">vie · 16:00</span>
+                </div>
+              </li>
+            </ul>
+            <div class="view-rem-separador">Completados</div>
+            <ul class="view-rem-lista view-rem-lista--completados">
+              <li class="view-rem-item">
+                <div class="view-rem-check view-rem-check--done"></div>
+                <div class="view-rem-body">
+                  <span class="view-rem-nombre">Preparar presentación</span>
+                  <span class="view-rem-hora">ayer · 15:00</span>
+                </div>
+              </li>
+              <li class="view-rem-item">
+                <div class="view-rem-check view-rem-check--done"></div>
+                <div class="view-rem-body">
+                  <span class="view-rem-nombre">Actualizar dependencias</span>
+                  <span class="view-rem-hora">lun · 09:00</span>
+                </div>
+              </li>
+            </ul>
+          </div>
         </div>
 
         <div class="app-view" data-view="ajustes">
