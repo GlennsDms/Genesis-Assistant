@@ -1,6 +1,6 @@
-import { createEvent, createReminder } from './db'
+import { createEvent, createReminder, listEvents, getEventById, updateEvent, deleteEvent } from './db'
 import { scheduleReminder } from './scheduler'
-import type { NewCalendarEvent, NewReminder } from './types'
+import type { NewCalendarEvent, NewReminder, CalendarEvent } from './types'
 
 export type ToolResult =
   | { ok: true; result: unknown }
@@ -27,6 +27,15 @@ export function normalizarArgs(args: Record<string, unknown>): Record<string, un
 export function esToolCallVacio(name: string, args: Record<string, unknown>): boolean {
   if (name === 'crear_evento') return !args.title && !args.start_at
   if (name === 'crear_recordatorio') return !args.title
+  if (name === 'listar_eventos') return false
+  if (name === 'editar_evento') {
+    if (!args.id) return true
+    if (!args.patch) return true
+    const p = args.patch
+    if (typeof p === 'object' && p !== null && Object.keys(p as Record<string, unknown>).length === 0) return true
+    return false
+  }
+  if (name === 'borrar_evento') return !args.id
   return false
 }
 
@@ -198,8 +207,115 @@ export async function executeTool(
     return { ok: true, result: creado }
   }
 
+  if (name === 'listar_eventos') {
+    const argsNorm = normalizarArgs(args)
+
+    const ahora  = new Date()
+    const desde  = typeof argsNorm.desde === 'string' && argsNorm.desde
+      ? argsNorm.desde
+      : ahora.toISOString()
+    const hasta  = typeof argsNorm.hasta === 'string' && argsNorm.hasta
+      ? argsNorm.hasta
+      : new Date(ahora.getTime() + 30 * 24 * 60 * 60_000).toISOString()
+
+    let eventos: CalendarEvent[]
+    try {
+      eventos = await listEvents({ from: desde, to: hasta })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error desconocido al leer la base de datos.'
+      return { ok: false, error: `No se pudieron obtener los eventos: ${msg}` }
+    }
+
+    // Los resultados ya vienen ordenados por start_at ASC desde listEvents,
+    // así que los primeros 50 son los más cercanos al inicio del rango.
+    let nota: string | undefined
+    if (eventos.length > 50) {
+      nota = `Hay ${eventos.length - 50} eventos más en el rango. Especifica un rango más estrecho para verlos.`
+      eventos = eventos.slice(0, 50)
+    }
+
+    const resultado = eventos.map(e => ({ id: e.id, title: e.title, start_at: e.start_at, end_at: e.end_at }))
+    return { ok: true, result: nota ? { eventos: resultado, nota } : { eventos: resultado } }
+  }
+
+  if (name === 'editar_evento') {
+    const argsNorm = normalizarArgs(args)
+
+    if (esToolCallVacio(name, argsNorm)) {
+      return { ok: 'silent_skip', reason: 'tool call vacío del modelo' }
+    }
+
+    const id = typeof argsNorm.id === 'number' ? argsNorm.id : null
+    if (id === null) {
+      return { ok: false, error: 'Falta el id del evento a editar.' }
+    }
+
+    const patchRaw = argsNorm.patch
+    if (typeof patchRaw !== 'object' || patchRaw === null) {
+      return { ok: false, error: 'El campo patch debe ser un objeto con los campos a modificar.' }
+    }
+    const patchInput = patchRaw as Record<string, unknown>
+
+    // Construir patch solo con campos de la whitelist y tipos correctos.
+    // all_day viene como boolean del schema de Gemini pero la BD espera 0 | 1.
+    const patch: Partial<Pick<CalendarEvent, 'title' | 'description' | 'location' | 'start_at' | 'end_at' | 'all_day'>> = {}
+    if ('title'       in patchInput && typeof patchInput.title       === 'string') patch.title       = patchInput.title
+    if ('description' in patchInput) patch.description = typeof patchInput.description === 'string' ? patchInput.description || null : null
+    if ('location'    in patchInput) patch.location    = typeof patchInput.location    === 'string' ? patchInput.location    || null : null
+    if ('start_at'    in patchInput && typeof patchInput.start_at    === 'string') patch.start_at    = patchInput.start_at
+    if ('end_at'      in patchInput && typeof patchInput.end_at      === 'string') patch.end_at      = patchInput.end_at
+    if ('all_day'     in patchInput) {
+      const v = patchInput.all_day
+      patch.all_day = typeof v === 'boolean' ? (v ? 1 : 0) : typeof v === 'number' ? v : 0
+    }
+
+    if (Object.keys(patch).length === 0) {
+      return { ok: 'silent_skip', reason: 'patch vacío tras aplicar whitelist' }
+    }
+
+    const eventoExistente = await getEventById(id)
+    if (!eventoExistente) {
+      return { ok: false, error: `No existe ningún evento con id ${id}.` }
+    }
+
+    try {
+      await updateEvent(id, patch)
+      return { ok: true, result: { id, actualizado: true } }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error desconocido al actualizar la base de datos.'
+      return { ok: false, error: `No se pudo actualizar el evento: ${msg}` }
+    }
+  }
+
+  if (name === 'borrar_evento') {
+    const argsNorm = normalizarArgs(args)
+
+    if (esToolCallVacio(name, argsNorm)) {
+      return { ok: 'silent_skip', reason: 'tool call vacío del modelo' }
+    }
+
+    const id = typeof argsNorm.id === 'number' ? argsNorm.id : null
+    if (id === null) {
+      return { ok: false, error: 'Falta el id del evento a borrar.' }
+    }
+
+    const eventoExistente = await getEventById(id)
+    if (!eventoExistente) {
+      return { ok: false, error: `No existe ningún evento con id ${id}.` }
+    }
+
+    try {
+      // deleteEvent cancela el recordatorio derivado y su tokio task antes de borrar.
+      await deleteEvent(id)
+      return { ok: true, result: { id, titulo: eventoExistente.title, eliminado: true } }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error desconocido al borrar de la base de datos.'
+      return { ok: false, error: `No se pudo borrar el evento: ${msg}` }
+    }
+  }
+
   return {
     ok: false,
-    error: `Herramienta desconocida: "${name}". Solo se admiten crear_evento y crear_recordatorio.`,
+    error: `Herramienta desconocida: "${name}". Las herramientas disponibles son: crear_evento, crear_recordatorio, listar_eventos, editar_evento, borrar_evento.`,
   }
 }

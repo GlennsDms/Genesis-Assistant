@@ -6,6 +6,8 @@ export interface GeminiFunctionParameter {
   type: string
   description: string
   enum?: string[]
+  // Para parámetros de tipo 'object' con estructura interna conocida.
+  properties?: Record<string, GeminiFunctionParameter>
 }
 
 export interface GeminiFunctionDeclaration {
@@ -95,8 +97,83 @@ const crearRecordatorioDeclaration: GeminiFunctionDeclaration = {
   },
 }
 
-// Único array de tools activo. Ambas declarations van en el mismo objeto GeminiTool
+const listarEventosDeclaration: GeminiFunctionDeclaration = {
+  name: 'listar_eventos',
+  description:
+    'Lista los eventos del calendario en un rango de fechas. Úsala cuando el usuario quiera saber qué tiene agendado — "qué tengo esta semana", "mis eventos de mañana", "hay algo el viernes". El resultado incluye el id de cada evento, imprescindible para usar editar_evento y borrar_evento. Si no se especifica rango, devuelve los próximos 30 días.',
+  parameters: {
+    type: 'object',
+    properties: {
+      desde: {
+        type: 'string',
+        description:
+          'Inicio del rango en formato ISO 8601 con offset. Si se omite, se usa la fecha y hora actuales.',
+      },
+      hasta: {
+        type: 'string',
+        description:
+          'Fin del rango en formato ISO 8601 con offset. Si se omite, se usa desde + 30 días.',
+      },
+    },
+    required: [],
+  },
+}
+
+const editarEventoDeclaration: GeminiFunctionDeclaration = {
+  name: 'editar_evento',
+  description:
+    'Modifica uno o varios campos de un evento existente. Úsala cuando el usuario quiera cambiar algo de un evento — la hora, el título, la descripción, el lugar. Si no conoces el id del evento, llama primero a listar_eventos para localizarlo por nombre y obtener su id. Nunca pidas el id al usuario — es un detalle interno que el usuario no conoce.',
+  parameters: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'number',
+        description: 'Identificador numérico del evento a modificar. Obligatorio.',
+      },
+      patch: {
+        type: 'object',
+        description:
+          'Campos a actualizar. Incluye solo los que cambian. Campos permitidos: title (string), description (string), location (string), start_at (ISO 8601 con offset), end_at (ISO 8601 con offset), all_day (boolean).',
+        properties: {
+          title:       { type: 'string',  description: 'Nuevo título del evento.' },
+          description: { type: 'string',  description: 'Nueva descripción del evento.' },
+          location:    { type: 'string',  description: 'Nuevo lugar del evento.' },
+          start_at:    { type: 'string',  description: 'Nueva fecha y hora de inicio en ISO 8601 con offset.' },
+          end_at:      { type: 'string',  description: 'Nueva fecha y hora de fin en ISO 8601 con offset.' },
+          all_day:     { type: 'boolean', description: 'true si el evento es de todo el día, false si tiene hora concreta.' },
+        },
+      },
+    },
+    required: ['id', 'patch'],
+  },
+}
+
+const borrarEventoDeclaration: GeminiFunctionDeclaration = {
+  name: 'borrar_evento',
+  description:
+    'Elimina permanentemente un evento del calendario. Úsala cuando el usuario quiera borrar o cancelar un evento. SIEMPRE llama primero a listar_eventos para obtener el id — nunca pidas el id al usuario ni lo inventes.',
+  parameters: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'number',
+        description: 'Identificador numérico del evento a eliminar. Obligatorio.',
+      },
+    },
+    required: ['id'],
+  },
+}
+
+// Único array de tools activo. Todas las declarations van en el mismo objeto GeminiTool
 // para que Gemini las trate como un conjunto cohesivo y pueda elegir entre ellas.
 export const GENESIS_TOOLS: GeminiTool[] = [
-  { functionDeclarations: [crearEventoDeclaration, crearRecordatorioDeclaration] },
+  {
+    functionDeclarations: [
+      crearEventoDeclaration,
+      crearRecordatorioDeclaration,
+      listarEventosDeclaration,
+      editarEventoDeclaration,
+      borrarEventoDeclaration,
+    ],
+  },
 ]

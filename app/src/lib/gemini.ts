@@ -72,6 +72,11 @@ const PROMPT_BASE = `Eres Genesis, un asistente personal. Directo, algo rebelde,
 HERRAMIENTAS DISPONIBLES:
 - crear_evento: úsala cuando el usuario quiera agendar algo que ocupa una franja horaria del calendario — tiene fecha, hora de inicio, opcionalmente duración o lugar. Ejemplos: "reunión con Marta el viernes a las 15", "clase de yoga mañana de 18:00 a 19:00".
 - crear_recordatorio: úsala cuando el usuario pida que Genesis le avise o recuerde algo a una hora concreta, sin que eso ocupe espacio en el calendario. Es un aviso puntual, sin duración ni lugar. Ejemplos: "recuérdame llamar a mamá mañana a las 20", "avísame a las 9 de que tengo que enviar el informe". Si el usuario no especifica hora, pregúntale antes de invocar.
+- listar_eventos: úsala cuando el usuario quiera saber qué tiene agendado — "qué tengo esta semana", "mis eventos de mañana", "hay algo el viernes". Devuelve el id de cada evento, que necesitarás para editar_evento y borrar_evento.
+- editar_evento: úsala cuando el usuario quiera cambiar algo de un evento existente — la hora, el título, el lugar, la descripción. SIEMPRE llama a listar_eventos primero para obtener el id correcto. Nunca pidas el id al usuario — es un detalle interno que el usuario no conoce.
+- borrar_evento: úsala cuando el usuario quiera eliminar un evento. SIEMPRE llama a listar_eventos primero para obtener el id correcto. Nunca pidas el id al usuario — es un detalle interno que el usuario no conoce.
+
+El campo "id" de los eventos es un detalle interno técnico. No lo menciones nunca en tus respuestas — refiérete a los eventos por su título o descripción.
 
 EN TODOS LOS DEMÁS CASOS responde con texto natural y útil:
 - Saludos, charla casual → conversación amable y breve.
@@ -80,7 +85,7 @@ EN TODOS LOS DEMÁS CASOS responde con texto natural y útil:
 
 Si dudas entre invocar una herramienta o responder en texto, responde en texto. Un falso negativo es preferible a una invocación no solicitada.
 
-NUNCA inventes nombres de herramientas. Solo existen crear_evento y crear_recordatorio.
+Solo usa las herramientas listadas arriba. No inventes nombres.
 
 INSTRUCCIONES PARA FECHAS RELATIVAS:
 - "hoy" = la fecha actual.
@@ -263,180 +268,153 @@ async function flujoConTools(
 ): Promise<void> {
   const { tools, onToolCall, signal } = opciones
 
-  // Primera llamada no-streaming: necesitamos ver la respuesta completa para
-  // saber si el modelo emite un functionCall o texto plano. El streaming no
-  // permite inspeccionar el tipo de respuesta antes de empezar a procesarla.
-  const body: GeminiRequest = {
-    system_instruction: { parts: [{ text: systemPrompt }] },
-    contents,
-    tools,
-  }
-
-  const controller = new AbortController()
-  const timeoutId  = setTimeout(() => controller.abort(), TOOL_TIMEOUT_MS)
-  // Propagar cancelación externa del caller.
-  signal?.addEventListener('abort', () => controller.abort())
-
-  let response: Response
-  try {
-    response = await fetch(GENERATE_URL, {
-      method: 'POST',
-      headers: buildHeaders(apiKey),
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    })
-  } catch (err) {
-    clearTimeout(timeoutId)
-    if (err instanceof Error && err.name === 'AbortError') {
-      onToolCall?.(tools?.[0]?.functionDeclarations[0]?.name ?? 'tool', 'error', 'TIEMPO AGOTADO')
-      return
-    }
-    onChunk('No se pudo conectar con Gemini. Comprueba tu conexión a internet.')
-    return
-  }
-  clearTimeout(timeoutId)
-
-  if (!response.ok) {
-    handleHttpError(response.status, onChunk)
-    return
-  }
-
-  let data: GeminiGenerateResponse
-  try {
-    data = await response.json() as GeminiGenerateResponse
-  } catch {
-    onChunk('Error al procesar la respuesta de Gemini.')
-    return
-  }
-
-  if (data.error) {
-    if (data.error.code === 401 || data.error.code === 403) throw new InvalidApiKeyError()
-    onChunk(`Error de Gemini: ${data.error.message}`)
-    return
-  }
-
-  const candidato = data.candidates?.[0]
-  if (!candidato) {
-    onChunk('Gemini no devolvió respuesta. Inténtalo de nuevo.')
-    return
-  }
-
-  const parts = candidato.content.parts
-
-  // ── Caso 1: respuesta de texto, sin functionCall ──
-  const textoParts = parts.filter(p => p.text !== undefined)
-  const functionCallPart = parts.find(p => p.functionCall !== undefined)
-
-  if (!functionCallPart) {
-    const texto = textoParts.map(p => p.text).join('')
-    if (texto) onChunk(texto)
-    return
-  }
-
-  // ── Caso 2: el modelo quiere invocar una herramienta ──
-  const fc = functionCallPart.functionCall!
-  const toolName = fc.name
-  const toolArgs = normalizarArgs(fc.args)
-
-  // Defensa contra nombres inventados.
+  // Precalculamos el set de nombres válidos una vez; no cambia entre iteraciones.
   const nombresRegistrados = new Set(
     tools?.flatMap(t => t.functionDeclarations.map(d => d.name)) ?? []
   )
-  if (!nombresRegistrados.has(toolName)) {
-    console.warn(`[genesis-tools] tool no registrado: "${toolName}"`)
-    // Enviamos el error de vuelta al modelo para que reformule en texto.
-    const mensajesCorreccion: GeminiContent[] = [
-      ...contents,
-      { role: 'model', parts },
-      {
-        role: 'user',
-        parts: [{
-          functionResponse: {
-            name: toolName,
-            id: fc.id,
-            response: {
-              error: `La herramienta "${toolName}" no existe. Solo están disponibles crear_evento y crear_recordatorio. Responde al usuario en texto plano.`,
-            },
-          },
-        }],
-      },
-    ]
-    await flujoStream(apiKey, systemPrompt, mensajesCorreccion, onChunk, signal)
-    return
-  }
 
-  // Pre-check: ignorar silenciosamente si los args son ruido del modelo.
-  if (esToolCallVacio(toolName, toolArgs)) {
-    console.warn('[genesis-tools] tool call vacío detectado, ignorando, args:', toolArgs)
-    const textoRuido = textoParts.map(p => p.text).join('')
-    if (textoRuido) {
-      onChunk(textoRuido)
-    } else {
-      await flujoStream(apiKey, systemPrompt, contents, onChunk, signal)
+  // Loop de herramientas: permite encadenar llamadas (p.ej. listar_eventos →
+  // borrar_evento) sin volver al usuario entre medias. Cada iteración hace una
+  // llamada no-streaming para detectar si el modelo quiere invocar otra herramienta
+  // o ya tiene una respuesta final de texto.
+  const MAX_ITERACIONES = 5
+  let currentContents = contents
+
+  for (let iteracion = 0; iteracion < MAX_ITERACIONES; iteracion++) {
+    const controller = new AbortController()
+    const timeoutId  = setTimeout(() => controller.abort(), TOOL_TIMEOUT_MS)
+    signal?.addEventListener('abort', () => controller.abort())
+
+    let response: Response
+    try {
+      response = await fetch(GENERATE_URL, {
+        method: 'POST',
+        headers: buildHeaders(apiKey),
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: currentContents,
+          tools,
+        } satisfies GeminiRequest),
+        signal: controller.signal,
+      })
+    } catch (err) {
+      clearTimeout(timeoutId)
+      if (err instanceof Error && err.name === 'AbortError') {
+        onChunk('La operación tardó demasiado. Inténtalo de nuevo.')
+        return
+      }
+      onChunk('No se pudo conectar con Gemini. Comprueba tu conexión a internet.')
+      return
     }
-    return
-  }
+    clearTimeout(timeoutId)
 
-  console.log(`[genesis-tools] tool detectado: ${toolName}, args:`, toolArgs)
-  onToolCall?.(toolName, 'ejecutando')
+    if (!response.ok) {
+      handleHttpError(response.status, onChunk)
+      return
+    }
 
-  const resultado = await executeTool(toolName, toolArgs)
-  console.log('[genesis-tools] resultado:', resultado)
+    let data: GeminiGenerateResponse
+    try {
+      data = await response.json() as GeminiGenerateResponse
+    } catch {
+      onChunk('Error al procesar la respuesta de Gemini.')
+      return
+    }
 
-  // silent_skip defensivo — no debería llegar aquí tras el pre-check.
-  if (resultado.ok === 'silent_skip') {
-    console.warn('[genesis-tools] silent_skip inesperado tras pre-check')
-    await flujoStream(apiKey, systemPrompt, contents, onChunk, signal)
-    return
-  }
+    if (data.error) {
+      if (data.error.code === 401 || data.error.code === 403) throw new InvalidApiKeyError()
+      onChunk(`Error de Gemini: ${data.error.message}`)
+      return
+    }
 
-  if (!resultado.ok) {
-    onToolCall?.(toolName, 'error', resultado.error)
-    // Pasamos el error al modelo para que lo reformule en lenguaje natural.
-    const mensajesConError: GeminiContent[] = [
-      ...contents,
+    const candidato = data.candidates?.[0]
+    if (!candidato) {
+      onChunk('Gemini no devolvió respuesta. Inténtalo de nuevo.')
+      return
+    }
+
+    const parts      = candidato.content.parts
+    const textoParts = parts.filter(p => p.text !== undefined)
+    const fcPart     = parts.find(p => p.functionCall !== undefined)
+
+    // ── Sin functionCall: el modelo responde con texto — fin del loop ──
+    if (!fcPart) {
+      const texto = textoParts.map(p => p.text).join('')
+      if (texto) {
+        console.log('[genesis-tools] respuesta final del modelo:', texto)
+        onChunk(texto)
+      }
+      return
+    }
+
+    // ── Con functionCall: validar, ejecutar y continuar el loop ──
+    const fc       = fcPart.functionCall!
+    const toolName = fc.name
+    const toolArgs = normalizarArgs(fc.args)
+
+    // Helper local para añadir una functionResponse al historial y continuar.
+    const responderConError = (msg: string): void => {
+      currentContents = [
+        ...currentContents,
+        { role: 'model', parts },
+        { role: 'user', parts: [{ functionResponse: { name: toolName, id: fc.id, response: { error: msg } } }] },
+      ]
+    }
+
+    // Defensa contra nombres inventados: devolver error al modelo para que reformule.
+    if (!nombresRegistrados.has(toolName)) {
+      console.warn(`[genesis-tools] tool no registrado: "${toolName}"`)
+      responderConError(
+        `La herramienta "${toolName}" no existe. Las disponibles son: crear_evento, crear_recordatorio, listar_eventos, editar_evento, borrar_evento. Responde al usuario en texto plano.`
+      )
+      continue
+    }
+
+    // Pre-check en cada iteración: args vacíos son ruido del modelo.
+    if (esToolCallVacio(toolName, toolArgs)) {
+      console.warn('[genesis-tools] tool call vacío en iteración', iteracion, 'args:', toolArgs)
+      const textoRuido = textoParts.map(p => p.text).join('')
+      if (textoRuido) { onChunk(textoRuido); return }
+      responderConError('Los argumentos de la herramienta estaban vacíos. Responde al usuario en texto plano.')
+      continue
+    }
+
+    // listar_eventos es un paso interno de búsqueda: no emite badge visible.
+    // editar_evento y borrar_evento sí son acciones visibles para el usuario.
+    const esVisible = toolName !== 'listar_eventos'
+    if (esVisible) onToolCall?.(toolName, 'ejecutando')
+    console.log(`[genesis-tools] tool detectado: ${toolName} (iteración ${iteracion}), args:`, toolArgs)
+
+    const resultado = await executeTool(toolName, toolArgs)
+    console.log('[genesis-tools] resultado:', resultado)
+
+    if (resultado.ok === 'silent_skip') {
+      // Defensivo: no debería llegar aquí tras el pre-check de esta iteración.
+      console.warn('[genesis-tools] silent_skip inesperado en iteración', iteracion)
+      responderConError('La herramienta no pudo ejecutarse. Responde al usuario en texto plano.')
+      continue
+    }
+
+    if (!resultado.ok) {
+      if (esVisible) onToolCall?.(toolName, 'error', resultado.error)
+      responderConError(resultado.error)
+      continue
+    }
+
+    if (esVisible) onToolCall?.(toolName, 'exito')
+    currentContents = [
+      ...currentContents,
       { role: 'model', parts },
-      {
-        role: 'user',
-        parts: [{
-          functionResponse: {
-            name: toolName,
-            id: fc.id,
-            response: { error: resultado.error },
-          },
-        }],
-      },
+      { role: 'user', parts: [{ functionResponse: { name: toolName, id: fc.id, response: { result: resultado.result } } }] },
     ]
-    await flujoStream(apiKey, systemPrompt, mensajesConError, onChunk, signal)
-    return
+    // Continúa el loop: el modelo recibirá el resultado y podrá invocar otro
+    // tool (p.ej. borrar_evento tras haber obtenido el id con listar_eventos)
+    // o responder directamente con texto.
   }
 
-  onToolCall?.(toolName, 'exito')
-
-  // Turno final: el modelo recibe el evento creado y genera la confirmación
-  // en lenguaje natural. Esta llamada sí usa streaming — el usuario ve la
-  // respuesta en tiempo real.
-  const mensajesConResultado: GeminiContent[] = [
-    ...contents,
-    { role: 'model', parts },
-    {
-      role: 'user',
-      parts: [{
-        functionResponse: {
-          name: toolName,
-          id: fc.id,
-          response: { result: resultado.result },
-        },
-      }],
-    },
-  ]
-
-  let textoFinal = ''
-  await flujoStream(apiKey, systemPrompt, mensajesConResultado, (chunk) => {
-    textoFinal += chunk
-    onChunk(chunk)
-  }, signal)
-  console.log('[genesis-tools] respuesta final del modelo:', textoFinal)
+  // Cap alcanzado: el modelo entró en un ciclo de herramientas sin resolverse.
+  console.warn('[genesis-tools] cap de iteraciones alcanzado')
+  onChunk('No pude completar la operación. Inténtalo de nuevo con una petición más concreta.')
 }
 
 // ── Helper: leer el stream SSE de Gemini ─────────────────────────────────────
