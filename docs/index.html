@@ -677,6 +677,292 @@
   .app-main {
     padding: 32px;
   }
+  .app-view { display: none; }
+  .app-view.active-view { display: block; }
+
+  /* ============ VISTA: CALENDARIO ============ */
+  .view-cal {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .view-cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .view-cal-titulo {
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: 28px;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--bone);
+  }
+  .view-cal-titulo span { color: var(--bone-dim); font-size: 20px; margin-left: 6px; }
+  .view-cal-nav { display: flex; gap: 6px; }
+  .view-cal-btn {
+    background: #222;
+    border: 1px solid #3a3a3a;
+    color: var(--bone-dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 4px 10px;
+    cursor: default;
+    line-height: 1;
+  }
+  .view-cal-semana {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 4px;
+  }
+  .view-cal-dia-semana {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--blood);
+    text-align: center;
+    padding: 4px 0;
+  }
+  .view-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    gap: 2px;
+    flex: 1;
+  }
+  .view-cal-celda {
+    background: #181818;
+    border: 1px solid #2a2a2a;
+    padding: 4px 5px;
+    min-height: 58px;
+    position: relative;
+  }
+  .view-cal-celda.fuera-mes {
+    background: #141414;
+    opacity: .45;
+  }
+  .view-cal-celda.es-hoy {
+    border-color: var(--blood);
+  }
+  .view-cal-celda.es-hoy .view-cal-dia-num {
+    background: var(--blood);
+    color: var(--bone);
+    border-radius: 2px;
+    padding: 0 3px;
+  }
+  .view-cal-dia-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--bone-dim);
+    display: inline-block;
+    line-height: 1.6;
+    margin-bottom: 3px;
+  }
+  .view-cal-pill {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    letter-spacing: .5px;
+    padding: 2px 4px;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-radius: 1px;
+  }
+  .view-cal-pill--red { background: var(--blood); color: var(--bone); }
+  .view-cal-pill--gold { background: var(--gold); color: var(--noir); }
+
+  /* ============ VISTA: RECORDATORIOS ============ */
+  .view-rem {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .view-rem-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .view-rem-titulo {
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: 28px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--bone);
+  }
+  .view-rem-btn-nuevo {
+    background: var(--blood);
+    border: none;
+    color: var(--bone);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 6px 14px;
+    cursor: default;
+    text-transform: uppercase;
+  }
+  .view-rem-lista {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+  }
+  .view-rem-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #181818;
+    border: 1px solid #2a2a2a;
+    border-left: 3px solid var(--blood);
+  }
+  .view-rem-lista--completados .view-rem-item {
+    border-left-color: #3a3a3a;
+    opacity: .55;
+  }
+  .view-rem-check {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--bone-dim);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .view-rem-check--done {
+    border-color: var(--blood);
+    background: var(--blood);
+    position: relative;
+  }
+  .view-rem-check--done::after {
+    content: '✓';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: var(--bone);
+    line-height: 1;
+  }
+  .view-rem-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .view-rem-nombre {
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--bone);
+    text-transform: uppercase;
+  }
+  .view-rem-lista--completados .view-rem-nombre {
+    text-decoration: line-through;
+    color: var(--bone-dim);
+  }
+  .view-rem-hora {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--bone-dim);
+  }
+  .view-rem-separador {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #555;
+    padding: 12px 0 8px;
+    border-top: 1px dashed #2a2a2a;
+    margin-top: 8px;
+  }
+
+  /* ============ VISTA: AJUSTES ============ */
+  .view-set {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .view-set-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .view-set-acento {
+    width: 4px;
+    height: 28px;
+    background: var(--blood);
+    flex-shrink: 0;
+  }
+  .view-set-titulo {
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--bone);
+    line-height: 1;
+  }
+  .view-set-key-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .view-set-key-valor {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: var(--bone-dim);
+    background: #181818;
+    border: 1px solid #2a2a2a;
+    padding: 8px 16px;
+    flex: 1;
+  }
+  .view-set-btn {
+    background: transparent;
+    border: 2px solid var(--blood);
+    color: var(--blood);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 7px 14px;
+    cursor: default;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .view-set-instrucciones {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    line-height: 1.8;
+    color: #555;
+  }
+  .view-set-instrucciones span { color: var(--blood); }
+  .view-set-btn-import {
+    background: var(--blood);
+    border: none;
+    color: var(--bone);
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: 16px;
+    letter-spacing: 2px;
+    padding: 10px 24px;
+    cursor: default;
+    text-transform: uppercase;
+  }
   .app-greeting {
     font-family: 'Anton', sans-serif;
     font-style: italic;
@@ -1244,37 +1530,191 @@
     <div class="app-body">
       <aside class="app-sidebar">
         <div class="app-side-logo">GNS</div>
-        <div class="app-side-item active">▸ Asistente</div>
-        <div class="app-side-item">Calendario</div>
-        <div class="app-side-item">Recordatorios</div>
+        <div class="app-side-item active" data-target="asistente" role="button" tabindex="0">Asistente</div>
+        <div class="app-side-item" data-target="calendario" role="button" tabindex="0">Calendario</div>
+        <div class="app-side-item" data-target="recordatorios" role="button" tabindex="0">Recordatorios</div>
         <div class="app-side-item">Horarios</div>
-        <div class="app-side-item">Ajustes</div>
+        <div class="app-side-item" data-target="ajustes" role="button" tabindex="0">Ajustes</div>
       </aside>
       <main class="app-main">
-        <h3 class="app-greeting">Buenas tardes, <span>Alex</span>.</h3>
-        <p class="app-subgreeting">Miércoles · 29 abril · 14:32</p>
+        <div class="app-view active-view" data-view="asistente">
+          <h3 class="app-greeting">Buenas tardes, <span>Alex</span>.</h3>
+          <p class="app-subgreeting">Miércoles · 29 abril · 14:32</p>
 
-        <div class="app-cards">
-          <div class="app-card">
-            <div class="app-card-num">3</div>
-            <div class="app-card-label">Eventos hoy</div>
+          <div class="app-cards">
+            <div class="app-card">
+              <div class="app-card-num">3</div>
+              <div class="app-card-label">Eventos hoy</div>
+            </div>
+            <div class="app-card">
+              <div class="app-card-num">7</div>
+              <div class="app-card-label">Recordatorios</div>
+            </div>
+            <div class="app-card">
+              <div class="app-card-num">2h</div>
+              <div class="app-card-label">Bloque de foco</div>
+            </div>
           </div>
-          <div class="app-card">
-            <div class="app-card-num">7</div>
-            <div class="app-card-label">Recordatorios</div>
-          </div>
-          <div class="app-card">
-            <div class="app-card-num">2h</div>
-            <div class="app-card-label">Bloque de foco</div>
+
+          <div class="app-chat">
+            <div class="chat-msg user" data-from="USR ▸">Recuérdame revisar el PR a las 18:00.</div>
+            <div class="chat-msg" data-from="GEN ▸">Hecho. Te avisaré a las 18:00 sobre revisar el PR. ¿Algo más?</div>
+            <div class="chat-input">
+              <span style="color: var(--blood); font-family: 'DM Mono', monospace;">▸</span>
+              <input class="chat-input-field" placeholder="Escribe un mensaje...">
+            </div>
           </div>
         </div>
 
-        <div class="app-chat">
-          <div class="chat-msg user" data-from="USR ▸">Recuérdame revisar el PR a las 18:00.</div>
-          <div class="chat-msg" data-from="GEN ▸">Hecho. Te avisaré a las 18:00 sobre revisar el PR. ¿Algo más?</div>
-          <div class="chat-input">
-            <span style="color: var(--blood); font-family: 'DM Mono', monospace;">▸</span>
-            <input class="chat-input-field" placeholder="Escribe un mensaje...">
+        <div class="app-view" data-view="calendario">
+          <div class="view-cal">
+            <div class="view-cal-header">
+              <h3 class="view-cal-titulo">MAYO <span>2026</span></h3>
+              <div class="view-cal-nav">
+                <button class="view-cal-btn">◂</button>
+                <button class="view-cal-btn">▸</button>
+              </div>
+            </div>
+            <div class="view-cal-semana">
+              <div class="view-cal-dia-semana">LUN</div>
+              <div class="view-cal-dia-semana">MAR</div>
+              <div class="view-cal-dia-semana">MIÉ</div>
+              <div class="view-cal-dia-semana">JUE</div>
+              <div class="view-cal-dia-semana">VIE</div>
+              <div class="view-cal-dia-semana">SÁB</div>
+              <div class="view-cal-dia-semana">DOM</div>
+            </div>
+            <div class="view-cal-grid">
+              <!-- Semana 1: 27 abr – 3 may -->
+              <div class="view-cal-celda fuera-mes"><span class="view-cal-dia-num">27</span></div>
+              <div class="view-cal-celda fuera-mes"><span class="view-cal-dia-num">28</span></div>
+              <div class="view-cal-celda fuera-mes"><span class="view-cal-dia-num">29</span></div>
+              <div class="view-cal-celda fuera-mes"><span class="view-cal-dia-num">30</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">1</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">2</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">3</span></div>
+              <!-- Semana 2: 4 – 10 may -->
+              <div class="view-cal-celda">
+                <span class="view-cal-dia-num">4</span>
+                <span class="view-cal-pill view-cal-pill--red">Sprint planning</span>
+              </div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">5</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">6</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">7</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">8</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">9</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">10</span></div>
+              <!-- Semana 3: 11 – 17 may -->
+              <div class="view-cal-celda"><span class="view-cal-dia-num">11</span></div>
+              <div class="view-cal-celda">
+                <span class="view-cal-dia-num">12</span>
+                <span class="view-cal-pill view-cal-pill--gold">1:1 con Marta</span>
+              </div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">13</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">14</span></div>
+              <div class="view-cal-celda es-hoy"><span class="view-cal-dia-num">15</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">16</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">17</span></div>
+              <!-- Semana 4: 18 – 24 may -->
+              <div class="view-cal-celda"><span class="view-cal-dia-num">18</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">19</span></div>
+              <div class="view-cal-celda">
+                <span class="view-cal-dia-num">20</span>
+                <span class="view-cal-pill view-cal-pill--red">Demo a cliente</span>
+              </div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">21</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">22</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">23</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">24</span></div>
+              <!-- Semana 5: 25 – 31 may -->
+              <div class="view-cal-celda"><span class="view-cal-dia-num">25</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">26</span></div>
+              <div class="view-cal-celda">
+                <span class="view-cal-dia-num">27</span>
+                <span class="view-cal-pill view-cal-pill--gold">Revisión Q2</span>
+              </div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">28</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">29</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">30</span></div>
+              <div class="view-cal-celda"><span class="view-cal-dia-num">31</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="app-view" data-view="recordatorios">
+          <div class="view-rem">
+            <div class="view-rem-header">
+              <h3 class="view-rem-titulo">Recordatorios</h3>
+              <button class="view-rem-btn-nuevo">+ Nuevo</button>
+            </div>
+            <ul class="view-rem-lista">
+              <li class="view-rem-item">
+                <div class="view-rem-check"></div>
+                <div class="view-rem-body">
+                  <span class="view-rem-nombre">Revisar PR del equipo</span>
+                  <span class="view-rem-hora">hoy · 18:00</span>
+                </div>
+              </li>
+              <li class="view-rem-item">
+                <div class="view-rem-check"></div>
+                <div class="view-rem-body">
+                  <span class="view-rem-nombre">Enviar informe trimestral</span>
+                  <span class="view-rem-hora">mañana · 10:00</span>
+                </div>
+              </li>
+              <li class="view-rem-item">
+                <div class="view-rem-check"></div>
+                <div class="view-rem-body">
+                  <span class="view-rem-nombre">Llamar al cliente</span>
+                  <span class="view-rem-hora">vie · 16:00</span>
+                </div>
+              </li>
+            </ul>
+            <div class="view-rem-separador">Completados</div>
+            <ul class="view-rem-lista view-rem-lista--completados">
+              <li class="view-rem-item">
+                <div class="view-rem-check view-rem-check--done"></div>
+                <div class="view-rem-body">
+                  <span class="view-rem-nombre">Preparar presentación</span>
+                  <span class="view-rem-hora">ayer · 15:00</span>
+                </div>
+              </li>
+              <li class="view-rem-item">
+                <div class="view-rem-check view-rem-check--done"></div>
+                <div class="view-rem-body">
+                  <span class="view-rem-nombre">Actualizar dependencias</span>
+                  <span class="view-rem-hora">lun · 09:00</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="app-view" data-view="ajustes">
+          <div class="view-set">
+            <section>
+              <div class="view-set-section-header">
+                <div class="view-set-acento"></div>
+                <h3 class="view-set-titulo">API Key de Gemini</h3>
+              </div>
+              <div class="view-set-key-row">
+                <span class="view-set-key-valor">••••••••••••2B0k</span>
+                <button class="view-set-btn">Eliminar</button>
+              </div>
+              <div class="view-set-instrucciones">
+                <span>▸</span> Cómo conseguir tu API key:<br>
+                1. Ve a aistudio.google.com (necesitas cuenta Google)<br>
+                2. Click en "Get API key" → "Create API key"<br>
+                3. Copia la key (empieza por AIza...) y pégala aquí
+              </div>
+            </section>
+            <section>
+              <div class="view-set-section-header">
+                <div class="view-set-acento"></div>
+                <h3 class="view-set-titulo">Importar Calendario</h3>
+              </div>
+              <button class="view-set-btn-import">Importar .ICS</button>
+            </section>
           </div>
         </div>
       </main>
@@ -1374,6 +1814,31 @@
 </footer>
 
 <script>
+  // sistema de vistas del mockup: cambia el contenido al clicar la sidebar
+  (function () {
+    var items = document.querySelectorAll('.app-side-item[data-target]');
+    var views = document.querySelectorAll('.app-view');
+
+    function activarVista() {
+      var target = this.dataset.target;
+      items.forEach(function (i) { i.classList.remove('active'); });
+      this.classList.add('active');
+      views.forEach(function (v) { v.classList.remove('active-view'); });
+      var vistaTarget = document.querySelector('.app-view[data-view="' + target + '"]');
+      if (vistaTarget) vistaTarget.classList.add('active-view');
+    }
+
+    items.forEach(function (item) {
+      item.addEventListener('click', activarVista);
+      item.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          activarVista.call(item);
+        }
+      });
+    });
+  }());
+
   // smooth click animation on mission cards (toggle visited stamp)
   document.querySelectorAll('.mission-card').forEach((card, i) => {
     card.addEventListener('click', () => {
