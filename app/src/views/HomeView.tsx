@@ -22,6 +22,15 @@ type ToolStatus =
   | { estado: 'error'; mensaje: string }
   | null
 
+// Texto del badge de éxito por herramienta. listar_eventos no aparece aquí
+// porque no emite onToolCall — es un paso interno invisible para el usuario.
+const BADGE_EXITO: Record<string, string> = {
+  crear_evento:       'EVENTO CREADO',
+  crear_recordatorio: 'RECORDATORIO CREADO',
+  editar_evento:      'EVENTO ACTUALIZADO',
+  borrar_evento:      'EVENTO BORRADO',
+}
+
 function obtenerSaludo(): string {
   const hora = new Date().getHours()
   if (hora >= 5 && hora < 12) return 'Buenos días'
@@ -302,7 +311,7 @@ function HomeView({ userName, onIrAjustes }: Props) {
                           {toolStatus.estado === 'ejecutando' &&
                             `▸ EJECUTANDO ${toolStatus.nombre.toUpperCase()}...`}
                           {toolStatus.estado === 'exito' &&
-                            `✓ ${toolStatus.nombre === 'crear_recordatorio' ? 'RECORDATORIO CREADO' : 'EVENTO CREADO'}`}
+                            `✓ ${BADGE_EXITO[toolStatus.nombre] ?? 'OPERACIÓN COMPLETADA'}`}
                           {toolStatus.estado === 'error' && `✕ ERROR: ${toolStatus.mensaje}`}
                         </div>
                       )}

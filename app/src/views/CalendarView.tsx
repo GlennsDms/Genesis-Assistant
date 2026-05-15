@@ -82,6 +82,33 @@ function CalendarView() {
     localStorage.setItem(LS_KEY, mesActivo.toISOString())
   }, [mesActivo])
 
+  // Mantiene panel.evento sincronizado con los datos frescos de la BD.
+  // eventsChanged dispara cargarEventos, que actualiza `eventos`. Este efecto
+  // reacciona al cambio de `eventos` y propaga la versión fresca al panel
+  // sin cerrarlo: el usuario ve los cambios reflejados sin interrumpir la vista.
+  useEffect(() => {
+    setPanel(prev => {
+      if (prev?.tipo !== 'evento') return prev
+      const fresco = eventos.find(e => e.id === prev.evento.id)
+      // Si el evento no se encuentra (fue borrado), el panel se cierra vía
+      // onCerrar en la Fase D antes de que este efecto pueda actuar. Preservar.
+      if (!fresco) return prev
+      // Guarda: si ningún campo editable cambió, devolver prev sin crear
+      // un objeto nuevo. Evita re-renders de EventDetailPanel en cada
+      // recarga de la cuadrícula cuando el evento no fue modificado.
+      const e = prev.evento
+      if (
+        fresco.title       === e.title       &&
+        fresco.start_at    === e.start_at    &&
+        fresco.end_at      === e.end_at      &&
+        fresco.description === e.description &&
+        fresco.location    === e.location    &&
+        fresco.all_day     === e.all_day
+      ) return prev
+      return { ...prev, evento: fresco }
+    })
+  }, [eventos])
+
   // ── Navegación de mes ───────────────────────────────────────────────────────
 
   function irMesAnterior() {

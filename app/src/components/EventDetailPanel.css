@@ -137,3 +137,230 @@
   text-transform: uppercase;
   color: var(--text-muted);
 }
+
+/* ── Modo edición — inputs ─────────────────────────────────────────────────── */
+
+.event-panel__titulo--editar {
+  font-size: clamp(16px, 2vw, 22px);
+  color: var(--text-secondary);
+}
+
+.event-panel__bloque--row {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.event-panel__input {
+  font-family: 'Oswald', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  padding: 7px 10px;
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.event-panel__input:focus {
+  border-color: var(--blood);
+}
+
+.event-panel__input--error {
+  border-color: var(--blood);
+}
+
+.event-panel__input--date {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color-scheme: dark;
+}
+
+.event-panel__textarea {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  outline: none;
+  line-height: 1.6;
+  transition: border-color 0.15s;
+}
+
+.event-panel__textarea:focus {
+  border-color: var(--blood);
+}
+
+.event-panel__checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--blood);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.event-panel__error {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--blood);
+  letter-spacing: 0.5px;
+  margin-top: 3px;
+}
+
+.event-panel__error--general {
+  display: block;
+  margin-top: 8px;
+}
+
+/* ── Pie de panel — botones de acción ──────────────────────────────────────── */
+
+.event-panel__pie {
+  display: flex;
+  gap: 8px;
+  margin-top: 24px;
+  flex-shrink: 0;
+}
+
+.event-panel__editar-acciones {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+  flex-shrink: 0;
+}
+
+/* Base compartida para botones de acción del pie */
+.event-panel__btn-editar,
+.event-panel__btn-borrar,
+.event-panel__btn-guardar,
+.event-panel__btn-cancelar {
+  font-family: 'Anton', sans-serif;
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 2px;
+  border: none;
+  padding: 8px 18px;
+  cursor: pointer;
+  transform: skewX(-8deg);
+  transition: background 0.15s;
+}
+
+.event-panel__btn-editar span,
+.event-panel__btn-borrar span,
+.event-panel__btn-guardar span,
+.event-panel__btn-cancelar span {
+  display: inline-block;
+  transform: skewX(8deg);
+}
+
+.event-panel__btn-editar {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.event-panel__btn-editar:hover {
+  background: var(--bone-dim);
+}
+
+.event-panel__btn-borrar {
+  background: transparent;
+  color: var(--blood);
+  border: 1px solid var(--blood);
+}
+
+.event-panel__btn-borrar:hover {
+  background: var(--blood);
+  color: var(--bone);
+}
+
+.event-panel__btn-guardar {
+  background: var(--blood);
+  color: var(--bone);
+}
+
+.event-panel__btn-guardar:hover:not(:disabled) {
+  background: var(--blood-dark);
+}
+
+.event-panel__btn-guardar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.event-panel__btn-cancelar {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.event-panel__btn-cancelar:hover:not(:disabled) {
+  background: var(--bone-dim);
+}
+
+/* ── Confirmación inline de borrado ────────────────────────────────────────── */
+/* Replica el patrón reminder-confirm* de ReminderItem con la estética del panel */
+
+.event-panel__confirm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.event-panel__confirm-pregunta {
+  font-family: 'Anton', sans-serif;
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--blood);
+}
+
+.event-panel__confirm-si,
+.event-panel__confirm-no {
+  font-family: 'Anton', sans-serif;
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 2px;
+  border: none;
+  padding: 8px 14px;
+  cursor: pointer;
+  transform: skewX(-8deg);
+  transition: background 0.15s;
+}
+
+.event-panel__confirm-si span,
+.event-panel__confirm-no span {
+  display: inline-block;
+  transform: skewX(8deg);
+}
+
+.event-panel__confirm-si {
+  background: var(--blood);
+  color: var(--bone);
+}
+
+.event-panel__confirm-si:hover:not(:disabled) {
+  background: var(--blood-dark);
+}
+
+.event-panel__confirm-no {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.event-panel__confirm-no:hover:not(:disabled) {
+  background: var(--bone-dim);
+}
+
+.event-panel__confirm-si:disabled,
+.event-panel__confirm-no:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

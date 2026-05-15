@@ -252,6 +252,12 @@ export async function listEvents(rango?: { from: string; to: string }): Promise<
   return db.select<CalendarEvent[]>('SELECT * FROM events ORDER BY start_at ASC')
 }
 
+export async function getEventById(id: number): Promise<CalendarEvent | null> {
+  const db = await getDb()
+  const rows = await db.select<CalendarEvent[]>('SELECT * FROM events WHERE id = ?', [id])
+  return rows[0] ?? null
+}
+
 export async function createEvent(input: NewCalendarEvent): Promise<CalendarEvent> {
   const db = await getDb()
   const result = await db.execute(
