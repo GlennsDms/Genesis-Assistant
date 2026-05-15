@@ -887,6 +887,82 @@
     border-top: 1px dashed #2a2a2a;
     margin-top: 8px;
   }
+
+  /* ============ VISTA: AJUSTES ============ */
+  .view-set {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .view-set-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .view-set-acento {
+    width: 4px;
+    height: 28px;
+    background: var(--blood);
+    flex-shrink: 0;
+  }
+  .view-set-titulo {
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--bone);
+    line-height: 1;
+  }
+  .view-set-key-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .view-set-key-valor {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: var(--bone-dim);
+    background: #181818;
+    border: 1px solid #2a2a2a;
+    padding: 8px 16px;
+    flex: 1;
+  }
+  .view-set-btn {
+    background: transparent;
+    border: 2px solid var(--blood);
+    color: var(--blood);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 7px 14px;
+    cursor: default;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .view-set-instrucciones {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    line-height: 1.8;
+    color: #555;
+  }
+  .view-set-instrucciones span { color: var(--blood); }
+  .view-set-btn-import {
+    background: var(--blood);
+    border: none;
+    color: var(--bone);
+    font-family: 'Anton', sans-serif;
+    font-style: italic;
+    font-size: 16px;
+    letter-spacing: 2px;
+    padding: 10px 24px;
+    cursor: default;
+    text-transform: uppercase;
+  }
   .app-greeting {
     font-family: 'Anton', sans-serif;
     font-style: italic;
@@ -1615,7 +1691,31 @@
         </div>
 
         <div class="app-view" data-view="ajustes">
-          <!-- vista: ajustes -->
+          <div class="view-set">
+            <section>
+              <div class="view-set-section-header">
+                <div class="view-set-acento"></div>
+                <h3 class="view-set-titulo">API Key de Gemini</h3>
+              </div>
+              <div class="view-set-key-row">
+                <span class="view-set-key-valor">••••••••••••2B0k</span>
+                <button class="view-set-btn">Eliminar</button>
+              </div>
+              <div class="view-set-instrucciones">
+                <span>▸</span> Cómo conseguir tu API key:<br>
+                1. Ve a aistudio.google.com (necesitas cuenta Google)<br>
+                2. Click en "Get API key" → "Create API key"<br>
+                3. Copia la key (empieza por AIza...) y pégala aquí
+              </div>
+            </section>
+            <section>
+              <div class="view-set-section-header">
+                <div class="view-set-acento"></div>
+                <h3 class="view-set-titulo">Importar Calendario</h3>
+              </div>
+              <button class="view-set-btn-import">Importar .ICS</button>
+            </section>
+          </div>
         </div>
       </main>
     </div>
